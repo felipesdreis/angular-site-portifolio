@@ -1,0 +1,20 @@
+.bannerCard {
+    width: 50vw;
+  }
+  .card {
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 3vh;
+    width: 60vw;
+    border: 3px solid #ff9500;
+    box-shadow: 2.5px 2.1px 2.7px rgba(0, 0, 0, 0.043),
+      6.3px 5.4px 6.9px rgba(0, 0, 0, 0.052),
+      12.9px 11px 14.2px rgba(0, 0, 0, 0.06),
+      26.6px 22.6px 29.2px rgba(0, 0, 0, 0.07), 73px 62px 80px rgba(0, 0, 0, 0.08);
+    border-radius: 10px;
+    font-family: Helvetica;
+    font-style: italic;
+    align-items: center;
+  }
+  
+
