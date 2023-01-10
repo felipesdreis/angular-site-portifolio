@@ -22,11 +22,6 @@ body {
     font-family: Roboto, "Helvetica Neue", sans-serif;
 }
 
-.nav {
-    width: 10vw;
-    margin: 0 auto;
-
-}
 .nav a{
     color: orange;
     font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;    
