@@ -27,5 +27,5 @@ export class ProjetosComponent {
         "https://github.com/felipesdreis/web_stopwatch_work/raw/main/interface-uso.png",
     },
   ];
-
+  
 }
