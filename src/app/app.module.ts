@@ -12,15 +12,15 @@ import { AppComponent } from './app.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HomeComponent } from './home/home.component';
 import { ProjetosComponent } from './projetos/projetos.component';
-import { BlogComponent } from './blog/blog.component';
+// import { BlogModule } from './blog/blog.module';
+
 
 
 @NgModule({
   declarations: [
     AppComponent,
     HomeComponent,
-    ProjetosComponent,
-    BlogComponent
+    ProjetosComponent
   ],
   imports: [
     BrowserModule,
