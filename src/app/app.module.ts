@@ -12,6 +12,7 @@ import { AppComponent } from './app.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HomeComponent } from './home/home.component';
 import { ProjetosComponent } from './projetos/projetos.component';
+import { RedirectComponent } from './redirect/redirect.component';
 
 
 
@@ -20,7 +21,8 @@ import { ProjetosComponent } from './projetos/projetos.component';
   declarations: [
     AppComponent,
     HomeComponent,
-    ProjetosComponent
+    ProjetosComponent,
+    RedirectComponent
   ],
   imports: [
     BrowserModule,
