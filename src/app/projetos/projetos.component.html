@@ -1,16 +1,28 @@
-<mat-card class="card" *ngFor="let item of projects">
-    <mat-card-header>
-        <mat-card-title>{{item.nome}}</mat-card-title>
-    </mat-card-header>
-    <mat-card-content>
-        <img class="bannerCard" src="{{item.banner}}" />
-    </mat-card-content>
-    <mat-card-actions>
-        <a href="{{item.link}}" target="_blank"><button mat-raised-button color="primary">Abrir
-                <mat-icon>open_in_new</mat-icon></button></a>
-    </mat-card-actions>
-</mat-card>
+<section class="projetos-grid">
 
-<footer>
-    
+  <div
+    class="proj-card neo-raised reveal-card"
+    *ngFor="let item of projects"
+    #cardRef
+  >
+    <h2 class="proj-name">{{ item.nome }}</h2>
+
+    <div class="proj-banner-wrap">
+      <img class="proj-banner" [src]="item.banner" [alt]="item.nome + ' preview'" />
+    </div>
+
+    <div class="proj-actions">
+      <a [href]="item.link" target="_blank" rel="noopener noreferrer">
+        <button class="neo-btn-sm">
+          Abrir
+          <mat-icon>open_in_new</mat-icon>
+        </button>
+      </a>
+    </div>
+  </div>
+
+</section>
+
+<footer class="projetos-footer">
+  <span class="footer-text">Felipe Reis &copy; 2024</span>
 </footer>
