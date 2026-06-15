@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Locked In — Rastreie hábitos. 100% privado. Android.</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg:        #121212;
+      --bg2:       #1E1E1E;
+      --primary:   #D84315;
+      --accent:    #FF6D00;
+      --green:     #22c55e;
+      --red:       #ef4444;
+      --text:      #F5F5F5;
+      --muted:     #94a3b8;
+      --card:      rgba(255,255,255,0.05);
+      --border:    rgba(255,255,255,0.08);
+      --radius:    16px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 18px 40px;
+      background: rgba(18,18,18,0.88);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo { display: flex; align-items: center; }
+    .nav-logo svg { display: block; }
+    .nav-cta {
+      background: var(--primary); color: #fff;
+      padding: 10px 24px; border-radius: 50px;
+      font-weight: 700; font-size: 0.9rem;
+      text-decoration: none; transition: opacity .2s;
+    }
+    .nav-cta:hover { opacity: 0.85; }
+
+    /* ── HERO ── */
+    #hero {
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      text-align: center;
+      padding: 120px 24px 80px;
+      background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(216,67,21,.2) 0%, transparent 70%),
+                  linear-gradient(180deg, #1a0800 0%, var(--bg) 100%);
+      position: relative;
+    }
+    .hero-inner { max-width: 720px; }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(216,67,21,.15); border: 1px solid rgba(216,67,21,.4);
+      color: var(--accent); padding: 6px 16px; border-radius: 50px;
+      font-size: 0.8rem; font-weight: 600; margin-bottom: 28px;
+      letter-spacing: .5px; text-transform: uppercase;
+    }
+    #hero h1 {
+      font-family: 'Bebas Neue', 'Inter', sans-serif;
+      font-size: clamp(3.2rem, 8vw, 5.5rem);
+      font-weight: 400; line-height: 1.0;
+      letter-spacing: 3px; margin-bottom: 22px;
+    }
+    #hero h1 em { font-style: normal; color: var(--accent); }
+    #hero p {
+      font-size: 1.15rem; color: var(--muted); line-height: 1.7;
+      max-width: 560px; margin: 0 auto 40px;
+    }
+    .hero-ctas { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-bottom: 60px; }
+    .btn-primary {
+      background: var(--primary); color: #fff;
+      padding: 16px 36px; border-radius: 50px;
+      font-weight: 700; font-size: 1rem; text-decoration: none;
+      transition: transform .2s, box-shadow .2s;
+      box-shadow: 0 0 40px rgba(216,67,21,.4);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 48px rgba(216,67,21,.5); }
+    .btn-secondary {
+      background: var(--card); color: var(--text);
+      border: 1px solid var(--border);
+      padding: 16px 36px; border-radius: 50px;
+      font-weight: 600; font-size: 1rem; text-decoration: none;
+      transition: background .2s;
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,.1); }
+
+    .hero-mockup {
+      background: rgba(255,255,255,.04); border: 1px solid var(--border);
+      border-radius: 28px; padding: 28px 24px;
+      max-width: 340px; margin: 0 auto;
+      backdrop-filter: blur(8px);
+    }
+    .mockup-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .mockup-title { font-weight: 700; font-size: 1rem; }
+    .mockup-date { color: var(--accent); font-size: 0.8rem; font-weight: 600; }
+    .mockup-habit {
+      background: rgba(255,255,255,.05); border-radius: 12px;
+      padding: 14px 16px; margin-bottom: 10px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .habit-left { display: flex; align-items: center; gap: 12px; }
+    .habit-icon { font-size: 1.4rem; }
+    .habit-name { font-weight: 600; font-size: 0.9rem; }
+    .habit-streak { font-size: 0.75rem; color: var(--muted); }
+    .habit-check {
+      width: 28px; height: 28px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .9rem;
+    }
+    .habit-check.done { background: var(--primary); }
+    .habit-check.done::after { content: '✓'; color: #fff; font-weight: 700; }
+    .habit-check.pending { border: 2px solid var(--border); }
+
+    .hero-pills {
+      display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 32px;
+    }
+    .pill {
+      background: rgba(255,255,255,.06); border: 1px solid var(--border);
+      border-radius: 50px; padding: 6px 14px;
+      font-size: 0.8rem; color: var(--muted);
+    }
+    .pill strong { color: var(--text); }
+
+    /* ── SECTIONS ── */
+    section { padding: 96px 24px; }
+    .section-label {
+      text-align: center; font-size: .8rem; font-weight: 700;
+      letter-spacing: 2px; text-transform: uppercase;
+      color: var(--accent); margin-bottom: 16px;
+    }
+    .section-title {
+      font-family: 'Bebas Neue', 'Inter', sans-serif;
+      text-align: center; font-size: clamp(2.2rem, 5vw, 3.4rem);
+      font-weight: 400; letter-spacing: 2px; margin-bottom: 16px;
+    }
+    .section-sub {
+      text-align: center; color: var(--muted); font-size: 1.05rem;
+      max-width: 540px; margin: 0 auto 56px; line-height: 1.7;
+    }
+    .container { max-width: 1080px; margin: 0 auto; }
+
+    /* ── POR QUE ── */
+    #porque { background: var(--bg2); }
+    .porque-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+    }
+    .porque-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 32px;
+    }
+    .porque-icon { font-size: 2rem; margin-bottom: 16px; }
+    .porque-card h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 10px; }
+    .porque-card p { color: var(--muted); font-size: .95rem; line-height: 1.65; }
+
+    /* ── FEATURES ── */
+    #features { background: var(--bg); }
+    .features-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+    }
+    .feature-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 28px;
+      transition: border-color .2s, transform .2s;
+    }
+    .feature-card:hover { border-color: rgba(216,67,21,.4); transform: translateY(-3px); }
+    .feature-icon {
+      width: 48px; height: 48px; border-radius: 12px;
+      background: rgba(216,67,21,.15); display: flex; align-items: center;
+      justify-content: center; font-size: 1.4rem; margin-bottom: 18px;
+    }
+    .feature-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 8px; }
+    .feature-card p { color: var(--muted); font-size: .9rem; line-height: 1.6; }
+
+    /* ── COMO FUNCIONA ── */
+    #como { background: var(--bg2); }
+    .steps { display: flex; flex-direction: column; gap: 0; max-width: 640px; margin: 0 auto; }
+    .step {
+      display: flex; gap: 24px; align-items: flex-start;
+      padding: 32px 0; border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+    .step:last-child { border-bottom: none; }
+    .step-num {
+      width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0;
+      background: var(--primary); display: flex; align-items: center;
+      justify-content: center; font-weight: 800; font-size: 1.1rem;
+    }
+    .step-content h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 8px; }
+    .step-content p { color: var(--muted); font-size: .95rem; line-height: 1.65; }
+
+    /* ── COMPARAÇÃO ── */
+    #comparacao { background: var(--bg); }
+    .table-wrap { overflow-x: auto; }
+    table {
+      width: 100%; border-collapse: collapse;
+      background: var(--card); border-radius: var(--radius);
+      overflow: hidden;
+    }
+    th, td { padding: 16px 20px; text-align: left; font-size: .9rem; }
+    thead th {
+      background: rgba(216,67,21,.15); font-weight: 700;
+      color: var(--text); border-bottom: 1px solid var(--border);
+    }
+    thead th:first-child { border-radius: 0; }
+    tbody tr { border-bottom: 1px solid var(--border); }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr td:first-child { font-weight: 600; color: var(--muted); }
+    .locked-in-col { color: var(--accent) !important; font-weight: 700 !important; }
+    .yes { color: var(--green); font-weight: 600; }
+    .no  { color: var(--red);   font-weight: 600; }
+    .highlight-col { background: rgba(216,67,21,.07); }
+
+    /* ── PRIVACIDADE CALLOUT ── */
+    #privacidade {
+      background: linear-gradient(135deg, #1a0a00 0%, #2a1000 100%);
+      padding: 80px 24px;
+    }
+    .priv-inner {
+      max-width: 720px; margin: 0 auto; text-align: center;
+    }
+    .priv-icon { font-size: 3rem; margin-bottom: 20px; }
+    #privacidade h2 {
+      font-family: 'Bebas Neue', 'Inter', sans-serif;
+      font-size: clamp(2rem, 4vw, 2.8rem); font-weight: 400;
+      letter-spacing: 2px; margin-bottom: 16px;
+    }
+    #privacidade p { color: var(--muted); font-size: 1rem; line-height: 1.75; max-width: 560px; margin: 0 auto; }
+    .priv-list {
+      display: flex; flex-wrap: wrap; gap: 12px;
+      justify-content: center; margin-top: 32px;
+    }
+    .priv-item {
+      background: rgba(34,197,94,.1); border: 1px solid rgba(34,197,94,.25);
+      color: var(--green); padding: 8px 18px; border-radius: 50px;
+      font-size: .85rem; font-weight: 600;
+    }
+
+    /* ── CTA FINAL ── */
+    #download {
+      background: radial-gradient(ellipse 80% 80% at 50% 50%, rgba(216,67,21,.3) 0%, transparent 70%),
+                  linear-gradient(135deg, #1a0800 0%, #121212 100%);
+      text-align: center; padding: 120px 24px;
+    }
+    #download h2 {
+      font-family: 'Bebas Neue', 'Inter', sans-serif;
+      font-size: clamp(2.6rem, 6vw, 4.2rem); font-weight: 400;
+      letter-spacing: 3px; margin-bottom: 18px;
+    }
+    #download p { color: var(--muted); font-size: 1.1rem; margin-bottom: 44px; max-width: 480px; margin-left: auto; margin-right: auto; }
+    .download-ctas { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+    .btn-play {
+      display: flex; align-items: center; gap: 12px;
+      background: #fff; color: #0f0f1e;
+      padding: 14px 28px; border-radius: 14px;
+      font-weight: 700; font-size: .95rem; text-decoration: none;
+      transition: transform .2s;
+    }
+    .btn-play:hover { transform: translateY(-2px); }
+    .btn-play-icon { font-size: 1.5rem; }
+    .btn-play-text { text-align: left; line-height: 1.2; }
+    .btn-play-text small { display: block; font-weight: 400; font-size: .75rem; color: #666; }
+    .btn-play-text strong { font-size: 1rem; }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--bg); border-top: 1px solid var(--border);
+      padding: 40px 24px; text-align: center;
+    }
+    footer .footer-logo { display: flex; justify-content: center; margin-bottom: 16px; }
+    footer p { color: var(--muted); font-size: .85rem; line-height: 1.7; }
+    footer a { color: var(--accent); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 600px) {
+      nav { padding: 16px 20px; }
+      section { padding: 72px 20px; }
+      .hero-ctas { flex-direction: column; align-items: center; }
+      .btn-primary, .btn-secondary { width: 100%; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="33 35 451 100" height="30" fill="none" role="img" aria-label="LOCKEDIN">
+      <path fill="#F5F5F5" d="M39.33 132L39.33 41L53.63 41L53.63 119L77.16 119L77.16 132L39.33 132Z M175.70 133.30Q165.43 133.30 160.03 127.45Q154.64 121.60 154.64 110.94L154.64 110.94L154.64 62.06Q154.64 51.40 160.03 45.55Q165.43 39.70 175.70 39.70L175.70 39.70Q185.97 39.70 191.37 45.55Q196.76 51.40 196.76 62.06L196.76 62.06L196.76 71.68L183.24 71.68L183.24 61.15Q183.24 52.70 176.09 52.70L176.09 52.70Q168.94 52.70 168.94 61.15L168.94 61.15L168.94 111.98Q168.94 120.30 176.09 120.30L176.09 120.30Q183.24 120.30 183.24 111.98L183.24 111.98L183.24 98.07L196.76 98.07L196.76 110.94Q196.76 121.60 191.37 127.45Q185.97 133.30 175.70 133.30L175.70 133.30Z M215.09 132L215.09 41L229.39 41L229.39 79.35L247.59 41L261.89 41L244.86 74.41L262.15 132L247.20 132L235.11 91.44L229.39 103.01L229.39 132L215.09 132Z M278.66 132L278.66 41L317.66 41L317.66 54L292.96 54L292.96 78.05L312.59 78.05L312.59 91.05L292.96 91.05L292.96 119L317.66 119L317.66 132L278.66 132Z M335.60 132L335.60 41L357.44 41Q368.10 41 373.43 46.72Q378.76 52.44 378.76 63.49L378.76 63.49L378.76 109.51Q378.76 120.56 373.43 126.28Q368.10 132 357.44 132L357.44 132L335.60 132ZM349.90 119L357.18 119Q360.69 119 362.57 116.92Q364.46 114.84 364.46 110.16L364.46 110.16L364.46 62.84Q364.46 58.16 362.57 56.08Q360.69 54 357.18 54L357.18 54L349.90 54L349.90 119Z M398.13 132L398.13 41L412.43 41L412.43 132L398.13 132Z M432.84 132L432.84 41L450.78 41L464.69 95.47L464.95 95.47L464.95 41L477.69 41L477.69 132L463.00 132L445.84 65.57L445.58 65.57L445.58 132L432.84 132Z"></path>
+      <circle cx="114.5" cy="86" r="35.1" fill="none" stroke="#D84315" stroke-width="15.6"></circle>
+    </svg>
+  </div>
+  <a class="nav-cta" href="#download">Baixar grátis</a>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-inner">
+    <div style="margin-bottom: 28px; display: flex; justify-content: center;">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="72" height="72" style="border-radius: 18px;" fill="none" role="img" aria-label="Locked In — ícone do app">
+        <rect width="1024" height="1024" rx="232" fill="#121212"></rect>
+        <g stroke="#F5F5F5" stroke-opacity="0.05" fill="none" stroke-width="6">
+          <circle cx="512" cy="512" r="300"></circle>
+          <line x1="142" y1="788" x2="882" y2="788"></line>
+        </g>
+        <circle cx="512" cy="512" r="208" fill="none" stroke="#D84315" stroke-width="92"></circle>
+      </svg>
+    </div>
+    <div class="hero-badge">🏀 Android · Offline · Gratuito</div>
+    <h1>Construa hábitos.<br/><em>Como um atleta.</em><br/>Locked In.</h1>
+    <p>Inspirado na mentalidade dos atletas de elite. Cada dia completado é uma cesta. Cada sequência, uma vitória que vale a pena proteger.</p>
+    <div class="hero-ctas">
+      <a class="btn-primary" href="#download">⬇ Baixar para Android</a>
+      <a class="btn-secondary" href="#features">Ver funcionalidades</a>
+    </div>
+
+    <div class="hero-mockup">
+      <div class="mockup-header">
+        <span class="mockup-title">Hoje, quinta-feira</span>
+        <span class="mockup-date">3/4 cestas</span>
+      </div>
+      <div class="mockup-habit">
+        <div class="habit-left">
+          <span class="habit-icon">🏃</span>
+          <div>
+            <div class="habit-name">Correr 30 min</div>
+            <div class="habit-streak">🔥 14 dias</div>
+          </div>
+        </div>
+        <div class="habit-check done"></div>
+      </div>
+      <div class="mockup-habit">
+        <div class="habit-left">
+          <span class="habit-icon">📚</span>
+          <div>
+            <div class="habit-name">Leitura</div>
+            <div class="habit-streak">🔥 7 dias</div>
+          </div>
+        </div>
+        <div class="habit-check done"></div>
+      </div>
+      <div class="mockup-habit">
+        <div class="habit-left">
+          <span class="habit-icon">🧘</span>
+          <div>
+            <div class="habit-name">Meditação</div>
+            <div class="habit-streak">🔥 3 dias</div>
+          </div>
+        </div>
+        <div class="habit-check done"></div>
+      </div>
+      <div class="mockup-habit">
+        <div class="habit-left">
+          <span class="habit-icon">💧</span>
+          <div>
+            <div class="habit-name">Beber água</div>
+            <div class="habit-streak">⏳ pendente</div>
+          </div>
+        </div>
+        <div class="habit-check pending"></div>
+      </div>
+    </div>
+
+    <div class="hero-pills">
+      <span class="pill"><strong>Zero</strong> anúncios</span>
+      <span class="pill"><strong>Zero</strong> cadastro</span>
+      <span class="pill"><strong>Zero</strong> dados enviados</span>
+      <span class="pill">100% <strong>offline</strong></span>
+    </div>
+  </div>
+</section>
+
+<!-- POR QUE LOCKED IN -->
+<section id="porque">
+  <div class="container">
+    <p class="section-label">Por que existe</p>
+    <h2 class="section-title">A mentalidade certa.<br/>As ferramentas certas.</h2>
+    <p class="section-sub">A maioria dos apps te distrai, te cobra ou te vigia. Locked In resolve os três de uma vez — sem concessões.</p>
+    <div class="porque-grid">
+      <div class="porque-card">
+        <div class="porque-icon">🔥</div>
+        <h3>Streaks que motivam</h3>
+        <p>Acompanhe quantos dias consecutivos você manteve cada hábito. Perder a sequência dói — e é exatamente isso que te faz voltar amanhã.</p>
+      </div>
+      <div class="porque-card">
+        <div class="porque-icon">🔒</div>
+        <h3>Seus dados são seus</h3>
+        <p>Nenhum servidor recebe seus hábitos. Tudo fica salvo localmente no SQLite do seu celular — nem eu, o desenvolvedor, tenho acesso.</p>
+      </div>
+      <div class="porque-card">
+        <div class="porque-icon">⚡</div>
+        <h3>Interface sem distrações</h3>
+        <p>Sem gamificação artificial, sem notificações para comprar o premium. Cada elemento existe por um motivo. Apenas você e seus hábitos.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FUNCIONALIDADES -->
+<section id="features">
+  <div class="container">
+    <p class="section-label">Funcionalidades</p>
+    <h2 class="section-title">Tudo que você precisa.<br/>Nada que você não precisa.</h2>
+    <p class="section-sub">Criado para quem quer focar em construir hábitos, não em aprender um app complexo.</p>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">✏️</div>
+        <h3>Hábitos personalizados</h3>
+        <p>Crie quantos hábitos quiser com ícone, nome e frequência customizada — diário, dias da semana, fins de semana ou X vezes por semana.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔥</div>
+        <h3>Streaks precisos</h3>
+        <p>Streak atual, recorde histórico e total de completions. Calculado com precisão para cada tipo de frequência — sem bugs, sem surpresas.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔔</div>
+        <h3>Lembretes no horário certo</h3>
+        <p>Configure um lembrete por hábito e escolha os dias da semana. As notificações chegam no horário exato — sem spam, sem configuração complicada.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <h3>Analytics que fazem sentido</h3>
+        <p>Taxa de conclusão do dia, maiores streaks ativos e progresso geral. Sem números desnecessários — só o que importa para a próxima decisão.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📱</div>
+        <h3>Widget na tela inicial</h3>
+        <p>Acompanhe seus hábitos sem abrir o app. O widget 4×2 mostra seu placar do dia diretamente na tela inicial, no estilo de um painel de basquete.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🗃️</div>
+        <h3>Arquivo inteligente</h3>
+        <p>Pausou um hábito? Archive sem perder o histórico. Pode restaurar quando quiser, com todo o progresso anterior intacto.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COMO FUNCIONA -->
+<section id="como">
+  <div class="container">
+    <p class="section-label">Como usar</p>
+    <h2 class="section-title">Comece em 30 segundos</h2>
+    <p class="section-sub">Sem tutorial obrigatório, sem configuração complexa. Entre na quadra e jogue.</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <h3>Instale e abra — sem cadastro</h3>
+          <p>Baixe o app, abra. Pronto. Não pedimos e-mail, senha nem permissões desnecessárias. Você vai direto para a tela principal.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <h3>Crie seus hábitos</h3>
+          <p>Dê um nome, escolha um ícone e defina a frequência. Adicione um lembrete se quiser. Leva menos de 1 minuto por hábito.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <h3>Converta a cesta todo dia</h3>
+          <p>Um toque para marcar o hábito como feito. Seu streak cresce. A sequência fica visível e te motiva a não perder o ritmo. Simples assim.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COMPARAÇÃO -->
+<section id="comparacao">
+  <div class="container">
+    <p class="section-label">Comparação</p>
+    <h2 class="section-title">Por que Locked In?</h2>
+    <p class="section-sub">Compare com as alternativas e veja o que faz o Locked In ser diferente.</p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Critério</th>
+            <th class="highlight-col">🏀 Locked In</th>
+            <th>Streaks</th>
+            <th>Habitica</th>
+            <th>Habit—Daily</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Preço</td>
+            <td class="highlight-col locked-in-col">Grátis</td>
+            <td class="no">USD 14,99/ano</td>
+            <td class="yes">Grátis (com ads)</td>
+            <td class="no">USD 4,99/mês</td>
+          </tr>
+          <tr>
+            <td>Dados privados</td>
+            <td class="highlight-col locked-in-col">✓ 100% local</td>
+            <td class="no">✗ Cloud</td>
+            <td class="no">✗ Cloud</td>
+            <td class="no">✗ Cloud</td>
+          </tr>
+          <tr>
+            <td>Anúncios</td>
+            <td class="highlight-col locked-in-col">✓ Zero</td>
+            <td class="yes">✓ Zero</td>
+            <td class="no">✗ Intrusivos</td>
+            <td class="no">✗ Intrusivos</td>
+          </tr>
+          <tr>
+            <td>Funciona offline</td>
+            <td class="highlight-col locked-in-col">✓ Sempre</td>
+            <td class="yes">✓ Sim</td>
+            <td class="no">✗ Parcial</td>
+            <td class="no">✗ Parcial</td>
+          </tr>
+          <tr>
+            <td>Sem cadastro</td>
+            <td class="highlight-col locked-in-col">✓ Abra e use</td>
+            <td class="no">✗ Requer conta</td>
+            <td class="no">✗ Requer conta</td>
+            <td class="no">✗ Requer conta</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- PRIVACIDADE CALLOUT -->
+<section id="privacidade">
+  <div class="priv-inner">
+    <div class="priv-icon">🛡️</div>
+    <h2>Privacidade não é feature — é princípio</h2>
+    <p>Nenhuma conta. Nenhum servidor. Todos os seus hábitos e histórico ficam armazenados localmente no seu dispositivo. O Locked In não coleta, não sincroniza e não vende nenhum dado seu.</p>
+    <div class="priv-list">
+      <span class="priv-item">✓ Zero telemetria</span>
+      <span class="priv-item">✓ Zero rastreamento</span>
+      <span class="priv-item">✓ Zero anúncios</span>
+      <span class="priv-item">✓ Dados no seu celular</span>
+      <span class="priv-item">✓ Funciona sem internet</span>
+    </div>
+  </div>
+</section>
+
+<!-- CTA FINAL -->
+<section id="download">
+  <div class="container">
+    <h2>O jogo começa hoje.<br/>Entre na zona.</h2>
+    <p>O jogo começa quando você bate o primeiro hábito do dia. Grátis. Sem cadastro. Seus dados ficam com você. Locked In.</p>
+    <div class="download-ctas">
+      <a class="btn-play" href="https://play.google.com/store/apps/details?id=br.fdrapps.lockedin&hl=pt_BR" target="_blank" rel="noopener">
+        <span class="btn-play-icon">▶</span>
+        <div class="btn-play-text">
+          <small>Disponível no</small>
+          <strong>Google Play</strong>
+        </div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="33 35 451 100" height="24" fill="none" role="img" aria-label="LOCKEDIN">
+      <path fill="#F5F5F5" d="M39.33 132L39.33 41L53.63 41L53.63 119L77.16 119L77.16 132L39.33 132Z M175.70 133.30Q165.43 133.30 160.03 127.45Q154.64 121.60 154.64 110.94L154.64 110.94L154.64 62.06Q154.64 51.40 160.03 45.55Q165.43 39.70 175.70 39.70L175.70 39.70Q185.97 39.70 191.37 45.55Q196.76 51.40 196.76 62.06L196.76 62.06L196.76 71.68L183.24 71.68L183.24 61.15Q183.24 52.70 176.09 52.70L176.09 52.70Q168.94 52.70 168.94 61.15L168.94 61.15L168.94 111.98Q168.94 120.30 176.09 120.30L176.09 120.30Q183.24 120.30 183.24 111.98L183.24 111.98L183.24 98.07L196.76 98.07L196.76 110.94Q196.76 121.60 191.37 127.45Q185.97 133.30 175.70 133.30L175.70 133.30Z M215.09 132L215.09 41L229.39 41L229.39 79.35L247.59 41L261.89 41L244.86 74.41L262.15 132L247.20 132L235.11 91.44L229.39 103.01L229.39 132L215.09 132Z M278.66 132L278.66 41L317.66 41L317.66 54L292.96 54L292.96 78.05L312.59 78.05L312.59 91.05L292.96 91.05L292.96 119L317.66 119L317.66 132L278.66 132Z M335.60 132L335.60 41L357.44 41Q368.10 41 373.43 46.72Q378.76 52.44 378.76 63.49L378.76 63.49L378.76 109.51Q378.76 120.56 373.43 126.28Q368.10 132 357.44 132L357.44 132L335.60 132ZM349.90 119L357.18 119Q360.69 119 362.57 116.92Q364.46 114.84 364.46 110.16L364.46 110.16L364.46 62.84Q364.46 58.16 362.57 56.08Q360.69 54 357.18 54L357.18 54L349.90 54L349.90 119Z M398.13 132L398.13 41L412.43 41L412.43 132L398.13 132Z M432.84 132L432.84 41L450.78 41L464.69 95.47L464.95 95.47L464.95 41L477.69 41L477.69 132L463.00 132L445.84 65.57L445.58 65.57L445.58 132L432.84 132Z"></path>
+      <circle cx="114.5" cy="86" r="35.1" fill="none" stroke="#D84315" stroke-width="15.6"></circle>
+    </svg>
+  </div>
+  <p>
+    Enter the zone. Stay locked in.<br/>
+    <a href="/privacidade-locked-in">Política de Privacidade</a> ·
+    <a href="mailto:felipereis755@gmail.com">Contato</a>
+  </p>
+</footer>
+
+</body>
+</html>
