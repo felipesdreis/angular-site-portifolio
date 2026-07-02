@@ -1,54 +1,193 @@
-<main class="home-main">
+<!-- NAV -->
+<nav class="site-nav" [style.background]="navBg" [style.border-bottom]="navBorder">
+  <a href="#home" class="nav-logo">
+    <img src="/assets/Logo-Felipe-white.png" alt="FR" class="nav-logo-img">
+  </a>
+  <div class="nav-links">
+    <a href="#home" class="nav-link">Home</a>
+    <a href="#projetos" class="nav-link">Projetos</a>
+    <a href="https://blog.felipedosreis.com.br/" target="_blank" rel="noopener" class="blog-btn">Blog ↗</a>
+  </div>
+</nav>
 
-  <section class="hero">
-    <div class="avatar-wrap neo-raised">
-      <img alt="Felipe Reis" src="/assets/Logo-Felipe.png" class="avatar-img" />
+<!-- HERO -->
+<section id="home" class="hero">
+  <div class="hero-bg-gradient"></div>
+  <div class="hero-line hero-line-left"></div>
+  <div class="hero-line hero-line-right"></div>
+
+  <div class="hero-avatar">
+    <img src="/assets/Logo-Felipe-white.png" alt="FR" class="hero-logo-img">
+  </div>
+
+  <h1 class="hero-name">Felipe Reis</h1>
+  <p class="hero-subtitle">Solutions Engineer · Content Creator</p>
+
+  <div class="hero-social">
+    <a href="https://www.linkedin.com/in/felipesdreis/" target="_blank" rel="noopener" class="social-btn">LinkedIn</a>
+    <a href="https://github.com/felipesdreis" target="_blank" rel="noopener" class="social-btn">GitHub</a>
+    <a href="https://www.instagram.com/felipesdreis/" target="_blank" rel="noopener" class="social-btn">Instagram</a>
+    <a href="https://www.tiktok.com/@felipesdreis" target="_blank" rel="noopener" class="social-btn">TikTok</a>
+  </div>
+</section>
+
+<!-- TICKER -->
+<div class="ticker-wrap">
+  <div class="ticker-track">
+    <div class="ticker-set">
+      <span class="ticker-item">Python</span><span class="ticker-sep">◆</span>
+      <span class="ticker-item">Node.js</span><span class="ticker-sep">◆</span>
+      <span class="ticker-item">Docker</span><span class="ticker-sep">◆</span>
+      <span class="ticker-item">PostgreSQL</span><span class="ticker-sep">◆</span>
+      <span class="ticker-item">Git</span><span class="ticker-sep">◆</span>
+      <span class="ticker-item">Linux</span><span class="ticker-sep">◆</span>
+      <span class="ticker-item">Angular</span><span class="ticker-sep">◆</span>
+      <span class="ticker-item">TypeScript</span><span class="ticker-sep">◆</span>
+      <span class="ticker-item">Flask</span><span class="ticker-sep">◆</span>
+      <span class="ticker-item">Kubernetes</span><span class="ticker-sep">◆</span>
+      <span class="ticker-item">REST APIs</span><span class="ticker-sep">◆</span>
     </div>
-    <h1 class="hero-name neo-glow-text">Felipe Reis</h1>
-    <p class="hero-role">Software Developer &amp; Content Creator</p>
-  </section>
-
-  <section class="social-section">
-    <button (click)="openLink('l')" class="neo-btn">LinkedIn</button>
-    <button (click)="openLink('g')" class="neo-btn">GitHub</button>
-    <button (click)="openLink('i')" class="neo-btn">Instagram</button>
-  </section>
-
-  <section class="ticker-section" aria-label="Skills">
-    <div class="ticker-track">
-      <span class="ticker-item">Angular</span>
-      <span class="ticker-sep">▸</span>
-      <span class="ticker-item">TypeScript</span>
-      <span class="ticker-sep">▸</span>
-      <span class="ticker-item">Python</span>
-      <span class="ticker-sep">▸</span>
-      <span class="ticker-item">Node.js</span>
-      <span class="ticker-sep">▸</span>
-      <span class="ticker-item">Docker</span>
-      <span class="ticker-sep">▸</span>
-      <span class="ticker-item">PostgreSQL</span>
-      <span class="ticker-sep">▸</span>
-      <span class="ticker-item">Git</span>
-      <span class="ticker-sep">▸</span>
-      <span class="ticker-item">Linux</span>
-      <span class="ticker-sep">▸</span>
-      <span class="ticker-item">Angular</span>
-      <span class="ticker-sep">▸</span>
-      <span class="ticker-item">TypeScript</span>
-      <span class="ticker-sep">▸</span>
-      <span class="ticker-item">Python</span>
-      <span class="ticker-sep">▸</span>
-      <span class="ticker-item">Node.js</span>
-      <span class="ticker-sep">▸</span>
-      <span class="ticker-item">Docker</span>
-      <span class="ticker-sep">▸</span>
-      <span class="ticker-item">PostgreSQL</span>
-      <span class="ticker-sep">▸</span>
-      <span class="ticker-item">Git</span>
-      <span class="ticker-sep">▸</span>
-      <span class="ticker-item">Linux</span>
-      <span class="ticker-sep">▸</span>
+    <div class="ticker-set" aria-hidden="true">
+      <span class="ticker-item">Python</span><span class="ticker-sep">◆</span>
+      <span class="ticker-item">Node.js</span><span class="ticker-sep">◆</span>
+      <span class="ticker-item">Docker</span><span class="ticker-sep">◆</span>
+      <span class="ticker-item">PostgreSQL</span><span class="ticker-sep">◆</span>
+      <span class="ticker-item">Git</span><span class="ticker-sep">◆</span>
+      <span class="ticker-item">Linux</span><span class="ticker-sep">◆</span>
+      <span class="ticker-item">Angular</span><span class="ticker-sep">◆</span>
+      <span class="ticker-item">TypeScript</span><span class="ticker-sep">◆</span>
+      <span class="ticker-item">Flask</span><span class="ticker-sep">◆</span>
+      <span class="ticker-item">Kubernetes</span><span class="ticker-sep">◆</span>
+      <span class="ticker-item">REST APIs</span><span class="ticker-sep">◆</span>
     </div>
-  </section>
+  </div>
+</div>
 
-</main>
+<!-- SOBRE -->
+<section id="sobre" class="section-sobre">
+  <p class="section-label"><span class="section-line"></span>Sobre</p>
+  <p class="sobre-lead">Sou Felipe Reis, Solutions Engineer. Meu trabalho é transformar problemas complexos em soluções claras.</p>
+  <p class="sobre-body">Fora do trabalho, sou desenvolvedor por hobby, criador de conteúdo tech, ciclista e corredor — sempre buscando o próximo desafio, seja em uma arquitetura de software ou em uma prova de resistência.</p>
+</section>
+
+<!-- STACK -->
+<section id="stack" class="section-stack">
+  <div class="section-inner">
+    <p class="section-label"><span class="section-line"></span>Stack</p>
+    <div class="stack-pills">
+      <span class="stack-pill">Python</span>
+      <span class="stack-pill">Node.js</span>
+      <span class="stack-pill">TypeScript</span>
+      <span class="stack-pill">Angular</span>
+      <span class="stack-pill">Docker</span>
+      <span class="stack-pill">Kubernetes</span>
+      <span class="stack-pill">PostgreSQL</span>
+      <span class="stack-pill">Git</span>
+      <span class="stack-pill">Linux</span>
+      <span class="stack-pill">Flask</span>
+      <span class="stack-pill">REST APIs</span>
+      <span class="stack-pill">Oracle</span>
+      <span class="stack-pill">AI</span>
+      <span class="stack-pill">MCPs</span>
+    </div>
+  </div>
+</section>
+
+<!-- PROJETOS -->
+<section id="projetos" class="section-projetos">
+  <div class="section-inner">
+    <p class="section-label"><span class="section-line"></span>Projetos</p>
+    <div class="projects-grid">
+
+      <div class="project-card">
+        <div class="project-header">
+          <div>
+            <p class="project-num">01</p>
+            <h3 class="project-name">wtm-work-time-manager</h3>
+          </div>
+          <a href="https://github.com/felipesdreis/wtm-work-time-manager" target="_blank" rel="noopener" class="project-link">↗</a>
+        </div>
+        <p class="project-desc">Desktop app para registro e controle de tempo de trabalho, organizado por atividade.</p>
+        <div class="project-tags">
+          <span class="project-tag">Python</span>
+          <span class="project-tag">Desktop</span>
+        </div>
+      </div>
+
+      <div class="project-card">
+        <div class="project-header">
+          <div>
+            <p class="project-num">02</p>
+            <h3 class="project-name">dash-formulaone</h3>
+          </div>
+          <a href="https://github.com/felipesdreis/dash-formulaone" target="_blank" rel="noopener" class="project-link">↗</a>
+        </div>
+        <p class="project-desc">Dashboard interativo com visualização de dados estatísticos da temporada de F1 2021.</p>
+        <div class="project-tags">
+          <span class="project-tag">Python</span>
+          <span class="project-tag">Dash</span>
+          <span class="project-tag">Data Viz</span>
+        </div>
+      </div>
+
+      <div class="project-card">
+        <div class="project-header">
+          <div>
+            <p class="project-num">03</p>
+            <h3 class="project-name">keep-awake</h3>
+          </div>
+          <a href="https://github.com/felipesdreis/keep-awake" target="_blank" rel="noopener" class="project-link">↗</a>
+        </div>
+        <p class="project-desc">Utilitário para manter a tela e o sistema ativos durante tarefas longas ou automatizadas.</p>
+        <div class="project-tags">
+          <span class="project-tag">Python</span>
+          <span class="project-tag">Utilitário</span>
+        </div>
+      </div>
+
+      <div class="project-card">
+        <div class="project-header">
+          <div>
+            <p class="project-num">04</p>
+            <h3 class="project-name">video-path-organizer</h3>
+          </div>
+          <a href="https://github.com/felipesdreis/video-path-organizer" target="_blank" rel="noopener" class="project-link">↗</a>
+        </div>
+        <p class="project-desc">Ferramenta CLI para organizar e renomear arquivos de vídeo automaticamente por metadados.</p>
+        <div class="project-tags">
+          <span class="project-tag">Python</span>
+          <span class="project-tag">CLI</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- BLOG -->
+<section id="blog" class="section-blog">
+  <div class="section-inner">
+    <p class="section-label"><span class="section-line"></span>Blog</p>
+    <div class="blog-content">
+      <div class="blog-text">
+        <h2 class="blog-heading">Ideias, projetos<br>e experimentos.</h2>
+        <p class="blog-desc">Escrevo sobre tecnologia, desenvolvimento de software e os bastidores de quem cria enquanto aprende.</p>
+      </div>
+      <a href="https://blog.felipedosreis.com.br/" target="_blank" rel="noopener" class="blog-cta">Ler o blog ↗</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <span class="footer-copy">© 2026 Felipe Reis</span>
+    <div class="footer-links">
+      <a href="https://www.linkedin.com/in/felipesdreis/" target="_blank" rel="noopener" class="footer-link">LinkedIn</a>
+      <a href="https://github.com/felipesdreis" target="_blank" rel="noopener" class="footer-link">GitHub</a>
+      <a href="https://www.instagram.com/felipesdreis/" target="_blank" rel="noopener" class="footer-link">Instagram</a>
+      <a href="https://www.tiktok.com/@felipesdreis" target="_blank" rel="noopener" class="footer-link">TikTok</a>
+      <a href="https://blog.felipedosreis.com.br/" target="_blank" rel="noopener" class="footer-link">Blog</a>
+    </div>
+  </div>
+</footer>

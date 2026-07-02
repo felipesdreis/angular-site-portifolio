@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, HostListener } from '@angular/core';
 
 @Component({
   selector: 'app-home',
@@ -6,18 +6,13 @@ import { Component } from '@angular/core';
   styleUrls: ['./home.component.css']
 })
 export class HomeComponent {
-   openLink(tipoSocial: string){
-    switch(tipoSocial){
-      case 'l':
-        window.open("https://www.linkedin.com/in/felipesdreis/", "_blank");
-        break;
-      case 'g':
-        window.open("https://github.com/felipesdreis", "_blank");
-        break;
-      case 'i':
-        window.open("https://www.instagram.com/felipesdreis/", "_blank");
-        break;
-    }
+  navBg = 'transparent';
+  navBorder = '1px solid transparent';
+
+  @HostListener('window:scroll')
+  onScroll() {
+    const solid = window.scrollY > 60;
+    this.navBg = solid ? 'rgba(15,13,19,0.88)' : 'transparent';
+    this.navBorder = solid ? '1px solid rgba(33,31,38,0.9)' : '1px solid transparent';
   }
 }
-
