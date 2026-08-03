@@ -12,9 +12,8 @@
 
 <!-- HERO -->
 <section id="home" class="hero">
-  <div class="hero-bg-gradient"></div>
-  <div class="hero-line hero-line-left"></div>
-  <div class="hero-line hero-line-right"></div>
+  <div class="hero-line hero-line-left" [appParallax]="0.6"></div>
+  <div class="hero-line hero-line-right" [appParallax]="0.85"></div>
 
   <div class="hero-avatar">
     <img src="/assets/Logo-Felipe-white.png" alt="FR" class="hero-logo-img">
@@ -64,7 +63,7 @@
 </div>
 
 <!-- SOBRE -->
-<section id="sobre" class="section-sobre">
+<section id="sobre" class="section-sobre" [appParallax]="0.12">
   <p class="section-label"><span class="section-line"></span>Sobre</p>
   <p class="sobre-lead">Sou Felipe Reis, Solutions Engineer. Meu trabalho é transformar problemas complexos em soluções claras.</p>
   <p class="sobre-body">Fora do trabalho, sou desenvolvedor por hobby, criador de conteúdo tech, ciclista e corredor — sempre buscando o próximo desafio, seja em uma arquitetura de software ou em uma prova de resistência.</p>
@@ -72,7 +71,7 @@
 
 <!-- STACK -->
 <section id="stack" class="section-stack">
-  <div class="section-inner">
+  <div class="section-inner" [appParallax]="0.15">
     <p class="section-label"><span class="section-line"></span>Stack</p>
     <div class="stack-pills">
       <span class="stack-pill">Python</span>
@@ -95,7 +94,7 @@
 
 <!-- PROJETOS -->
 <section id="projetos" class="section-projetos">
-  <div class="section-inner">
+  <div class="section-inner" [appParallax]="0.08">
     <p class="section-label"><span class="section-line"></span>Projetos</p>
     <div class="projects-grid">
 
@@ -166,7 +165,7 @@
 
 <!-- BLOG -->
 <section id="blog" class="section-blog">
-  <div class="section-inner">
+  <div class="section-inner" [appParallax]="0.18">
     <p class="section-label"><span class="section-line"></span>Blog</p>
     <div class="blog-content">
       <div class="blog-text">

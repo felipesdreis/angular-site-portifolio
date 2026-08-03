@@ -1,20 +1,18 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
-import { MatIconModule } from '@angular/material/icon';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HomeComponent } from './home/home.component';
-import { ProjetosComponent } from './projetos/projetos.component';
 import { RedirectComponent } from './redirect/redirect.component';
+import { ParallaxDirective } from './parallax.directive';
 
 @NgModule({
-  declarations: [AppComponent, HomeComponent, ProjetosComponent, RedirectComponent],
+  declarations: [AppComponent, HomeComponent, RedirectComponent, ParallaxDirective],
   imports: [
     BrowserModule,
     AppRoutingModule,
-    BrowserAnimationsModule,
-    MatIconModule
+    BrowserAnimationsModule
   ],
   providers: [],
   bootstrap: [AppComponent]

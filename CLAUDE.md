@@ -14,7 +14,7 @@ npm test         # ng test  — Karma + Jasmine
 ## Stack
 
 - **Angular 15** + TypeScript 4.8 (strict mode ativado)
-- **Angular Material 15** — tema prebuilt `purple-green`; componentes usados: Toolbar, Icon, Button, Card
+- **Angular Material 15** — instalado no `package.json` mas não importado em lugar nenhum do app (removido de `AppModule` junto com o `ProjetosComponent`, único consumidor de `MatIconModule`)
 - **CSS puro** — sem SCSS/Sass; estilos globais em `src/styles.css`, estilos de componente em arquivos `.css` individuais
 - **ngx-markdown 15** — instalado, uso mínimo atualmente
 - **RxJS 7.5**
@@ -23,11 +23,11 @@ npm test         # ng test  — Karma + Jasmine
 
 ```
 src/app/
-├── app.component.*          # Root: toolbar de navegação + <router-outlet>
-├── app.module.ts            # Declara os 4 componentes, importa módulos Material
-├── app-routing.module.ts    # Rotas centralizadas
-├── home/                    # Landing page: logo + botões de redes sociais
-├── projetos/                # Galeria de projetos em mat-card (*ngFor)
+├── app.component.*          # Root: layer de gradiente de fundo (parallax fixo) + <router-outlet>
+├── app.module.ts            # Declara HomeComponent, RedirectComponent, ParallaxDirective
+├── app-routing.module.ts    # Rotas + wildcard (**) redirecionando pra Home
+├── parallax.directive.ts    # Diretiva `appParallax` reutilizável (scroll-linked transform)
+├── home/                    # Single-page: nav + hero + sobre + stack + projetos + blog + footer
 └── redirect/                # Redireciona /shared → Google Drive na inicialização
 ```
 
@@ -35,29 +35,23 @@ src/app/
 
 | Caminho      | Componente          | Descrição                        |
 |-------------|---------------------|----------------------------------|
-| `/`          | HomeComponent       | Landing page                     |
-| `/projetos`  | ProjetosComponent   | Galeria de projetos              |
+| `/`          | HomeComponent       | Página única (single-page)       |
 | `/shared`    | RedirectComponent   | Redirect para pasta Google Drive |
+| `**`         | —                    | redirectTo `/` (sem 404)         |
 
 ## Estilo visual
 
-- Dark theme: fundo `#212121`, texto `aliceblue`
-- Acentos: amarelo `#DBDA2C` (toolbar), laranja `#DB5116` / `#ff9500`
-- Fontes: **Bebas Neue** (decorativa) + **Roboto** — ambas via Google Fonts
+- Dark theme: fundo `#0F0D13`, texto `#E6E1E5`
+- Acentos: verde "Kermit" `#3FBE4D` / `#B6F2A4` — não há amarelo/laranja no app (essa paleta só existe em `src/assets/locked-in/index.html`, ver Notas importantes)
+- Fonte única: **Roboto** (+ Roboto Mono em tags/código) via Google Fonts — Bebas Neue não é usada no app Angular
 - Dimensionamento responsivo com unidades `vw`/`vh`
-- Efeitos hover em botões via pseudo-elemento `::before` + `transition: 0.5s`
+- `ParallaxDirective` (`appParallax`, `src/app/parallax.directive.ts`) dá profundidade via scroll; auto-detecta `position:fixed` e limita o deslocamento a 50px — reaproveitar em vez de recriar lógica de scroll
 
 ## Conteúdo do site
 
-### Projetos listados (`ProjetosComponent`)
+### Projetos listados (seção `#projetos` do `HomeComponent`)
 
-| Nome | Descrição |
-|------|-----------|
-| `wtm-work-time-manager` | Gerenciador de horas de trabalho |
-| `dash-formulaone-2021` | Dashboard de dados da F1 2021 |
-| `web_stopwatch_work` | Cronômetro web para trabalho |
-
-Cada projeto exibe um banner e linka para o repo no GitHub de `@felipesdreis`.
+4 cards hardcoded no template (`wtm-work-time-manager`, `dash-formulaone`, `keep-awake`, `video-path-organizer`) — nome, descrição curta, tags e link pro GitHub de `@felipesdreis`. Sem imagem de banner.
 
 ### Links sociais (`HomeComponent`)
 
@@ -69,6 +63,7 @@ Cada projeto exibe um banner e linka para o repo no GitHub de `@felipesdreis`.
 ## Convenções de código
 
 - TypeScript strict: `strict`, `strictTemplates`, `strictInjectionParameters` todos ativados
+- `strictTemplates` exige property binding (`[input]="valor"`) para `@Input` de tipo não-string — atributo puro (`input="valor"`) falha o build com `TS2322`
 - Sem preprocessador CSS — usar CSS puro nas alterações de estilo
 - Módulo Angular tradicional (não standalone components)
 - Novos componentes devem ser declarados em `AppModule`
@@ -78,3 +73,4 @@ Cada projeto exibe um banner e linka para o repo no GitHub de `@felipesdreis`.
 - **`/src/blog-bkp/`** é código legado de uma tentativa de blog interno. Não está em uso; o blog foi migrado para Hexo externo.
 - O arquivo `src/assets/blog/blog.md` está vazio — remanescente da tentativa anterior.
 - A rota `/shared` redireciona para uma pasta específica do Google Drive (ID: `1K6036Zt9cRQwCNB_krFez8YJG2KjH6Hp`).
+- **`src/assets/locked-in/index.html`** é uma landing estática solta ("Locked In"), sem rota Angular apontando pra ela — só acessível via URL direta do asset. Tem paleta/fontes próprias (laranja + Bebas Neue) não relacionadas ao resto do site.
