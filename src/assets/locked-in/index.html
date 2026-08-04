@@ -20,6 +20,7 @@
       --card:      rgba(255,255,255,0.05);
       --border:    rgba(255,255,255,0.08);
       --radius:    16px;
+      --ease-out:  cubic-bezier(0.23, 1, 0.32, 1);
     }
 
     html { scroll-behavior: smooth; }
@@ -29,6 +30,17 @@
       background: var(--bg);
       color: var(--text);
       overflow-x: hidden;
+    }
+
+    /* ── SCROLL REVEAL ── */
+    [data-reveal] {
+      opacity: 0; transform: translateY(16px);
+      transition: opacity 450ms var(--ease-out), transform 450ms var(--ease-out);
+    }
+    [data-reveal].in-view { opacity: 1; transform: translateY(0); }
+    @media (prefers-reduced-motion: reduce) {
+      [data-reveal] { transform: none; transition: opacity 450ms ease; }
+      #hero::before { animation: none; }
     }
 
     /* ── NAV ── */
@@ -42,13 +54,10 @@
     }
     .nav-logo { display: flex; align-items: center; }
     .nav-logo svg { display: block; }
-    .nav-cta {
-      background: var(--primary); color: #fff;
-      padding: 10px 24px; border-radius: 50px;
-      font-weight: 700; font-size: 0.9rem;
-      text-decoration: none; transition: opacity .2s;
-    }
-    .nav-cta:hover { opacity: 0.85; }
+    .nav-badge { display: flex; align-items: center; transition: transform 160ms var(--ease-out); }
+    .nav-badge img { height: 40px; width: auto; display: block; }
+    .nav-badge:hover { transform: translateY(-1px); }
+    .nav-badge:active { transform: scale(0.97); }
 
     /* ── HERO ── */
     #hero {
@@ -56,11 +65,16 @@
       display: flex; align-items: center; justify-content: center;
       text-align: center;
       padding: 120px 24px 80px;
-      background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(216,67,21,.2) 0%, transparent 70%),
-                  linear-gradient(180deg, #1a0800 0%, var(--bg) 100%);
-      position: relative;
+      background: linear-gradient(180deg, #1a0800 0%, var(--bg) 100%);
+      position: relative; overflow: hidden;
     }
-    .hero-inner { max-width: 720px; }
+    #hero::before {
+      content: ''; position: absolute; inset: 0; pointer-events: none;
+      background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(216,67,21,.2) 0%, transparent 70%);
+      animation: heroGlow 7s ease-in-out infinite;
+    }
+    @keyframes heroGlow { 0%, 100% { opacity: 0.85; } 50% { opacity: 1; } }
+    .hero-inner { max-width: 720px; position: relative; z-index: 1; }
     .hero-badge {
       display: inline-flex; align-items: center; gap: 8px;
       background: rgba(216,67,21,.15); border: 1px solid rgba(216,67,21,.4);
@@ -79,53 +93,46 @@
       font-size: 1.15rem; color: var(--muted); line-height: 1.7;
       max-width: 560px; margin: 0 auto 40px;
     }
-    .hero-ctas { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-bottom: 60px; }
-    .btn-primary {
-      background: var(--primary); color: #fff;
-      padding: 16px 36px; border-radius: 50px;
-      font-weight: 700; font-size: 1rem; text-decoration: none;
-      transition: transform .2s, box-shadow .2s;
-      box-shadow: 0 0 40px rgba(216,67,21,.4);
+    .hero-ctas { display: flex; align-items: center; gap: 14px; justify-content: center; flex-wrap: wrap; margin-bottom: 60px; }
+    .hero-badge-link {
+      display: flex; align-items: center;
+      filter: drop-shadow(0 0 24px rgba(216,67,21,.35));
+      transition: transform 160ms var(--ease-out);
     }
-    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 48px rgba(216,67,21,.5); }
+    .hero-badge-link img { height: 56px; width: auto; display: block; border-radius: 8px; }
+    .hero-badge-link:hover { transform: translateY(-2px); }
+    .hero-badge-link:active { transform: scale(0.97); }
     .btn-secondary {
       background: var(--card); color: var(--text);
       border: 1px solid var(--border);
       padding: 16px 36px; border-radius: 50px;
       font-weight: 600; font-size: 1rem; text-decoration: none;
-      transition: background .2s;
+      transition: background .2s, transform 160ms var(--ease-out);
     }
     .btn-secondary:hover { background: rgba(255,255,255,.1); }
+    .btn-secondary:active { transform: scale(0.97); }
 
-    .hero-mockup {
+    .hero-video {
+      position: relative; line-height: 0;
       background: rgba(255,255,255,.04); border: 1px solid var(--border);
-      border-radius: 28px; padding: 28px 24px;
+      border-radius: 28px; overflow: hidden;
       max-width: 340px; margin: 0 auto;
       backdrop-filter: blur(8px);
     }
-    .mockup-header {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 20px;
-    }
-    .mockup-title { font-weight: 700; font-size: 1rem; }
-    .mockup-date { color: var(--accent); font-size: 0.8rem; font-weight: 600; }
-    .mockup-habit {
-      background: rgba(255,255,255,.05); border-radius: 12px;
-      padding: 14px 16px; margin-bottom: 10px;
-      display: flex; align-items: center; justify-content: space-between;
-    }
-    .habit-left { display: flex; align-items: center; gap: 12px; }
-    .habit-icon { font-size: 1.4rem; }
-    .habit-name { font-weight: 600; font-size: 0.9rem; }
-    .habit-streak { font-size: 0.75rem; color: var(--muted); }
-    .habit-check {
-      width: 28px; height: 28px; border-radius: 50%;
+    .hero-video video { width: 100%; height: auto; display: block; }
+    .video-play {
+      position: absolute; inset: 0; margin: auto;
+      width: 72px; height: 72px; border-radius: 50%;
+      background: rgba(216,67,21,.92); border: none; color: #fff;
       display: flex; align-items: center; justify-content: center;
-      font-size: .9rem;
+      font-size: 1.5rem; cursor: pointer;
+      box-shadow: 0 8px 32px rgba(216,67,21,.5);
+      transition: transform 160ms var(--ease-out), opacity 200ms ease;
     }
-    .habit-check.done { background: var(--primary); }
-    .habit-check.done::after { content: '✓'; color: #fff; font-weight: 700; }
-    .habit-check.pending { border: 2px solid var(--border); }
+    .video-play:hover { transform: scale(1.06); }
+    .video-play:active { transform: scale(0.95); }
+    .video-play.hidden { opacity: 0; pointer-events: none; transform: scale(0.9); }
+    .video-play-icon { transform: translateX(3px); }
 
     .hero-pills {
       display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 32px;
@@ -266,18 +273,28 @@
     }
     #download p { color: var(--muted); font-size: 1.1rem; margin-bottom: 44px; max-width: 480px; margin-left: auto; margin-right: auto; }
     .download-ctas { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
-    .btn-play {
-      display: flex; align-items: center; gap: 12px;
-      background: #fff; color: #0f0f1e;
-      padding: 14px 28px; border-radius: 14px;
-      font-weight: 700; font-size: .95rem; text-decoration: none;
-      transition: transform .2s;
+    .play-badge-link { display: inline-flex; transition: transform 160ms var(--ease-out); }
+    .play-badge-link img { height: 64px; width: auto; display: block; }
+    .play-badge-link:hover { transform: translateY(-2px); }
+    .play-badge-link:active { transform: scale(0.97); }
+
+    /* ── STICKY MOBILE CTA ── */
+    .sticky-cta {
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 90;
+      display: none; justify-content: center; align-items: center;
+      padding: 12px 20px calc(12px + env(safe-area-inset-bottom));
+      background: rgba(18,18,18,0.92); backdrop-filter: blur(16px);
+      border-top: 1px solid var(--border);
+      transform: translateY(100%);
+      transition: transform 250ms var(--ease-out);
     }
-    .btn-play:hover { transform: translateY(-2px); }
-    .btn-play-icon { font-size: 1.5rem; }
-    .btn-play-text { text-align: left; line-height: 1.2; }
-    .btn-play-text small { display: block; font-weight: 400; font-size: .75rem; color: #666; }
-    .btn-play-text strong { font-size: 1rem; }
+    .sticky-cta.visible { transform: translateY(0); }
+    .sticky-cta a { display: flex; transition: transform 160ms var(--ease-out); }
+    .sticky-cta a:active { transform: scale(0.97); }
+    .sticky-cta img { height: 44px; width: auto; display: block; }
+    @media (max-width: 768px) {
+      .sticky-cta { display: flex; }
+    }
 
     /* ── FOOTER ── */
     footer {
@@ -294,7 +311,7 @@
       nav { padding: 16px 20px; }
       section { padding: 72px 20px; }
       .hero-ctas { flex-direction: column; align-items: center; }
-      .btn-primary, .btn-secondary { width: 100%; text-align: center; }
+      .btn-secondary { width: 100%; text-align: center; }
     }
   </style>
 </head>
@@ -308,7 +325,9 @@
       <circle cx="114.5" cy="86" r="35.1" fill="none" stroke="#D84315" stroke-width="15.6"></circle>
     </svg>
   </div>
-  <a class="nav-cta" href="#download">Baixar grátis</a>
+  <a class="nav-badge" href="https://play.google.com/store/apps/details?id=br.fdrapps.lockedin&hl=pt_BR" target="_blank" rel="noopener" aria-label="Disponível no Google Play">
+    <img src="https://play.google.com/intl/pt-br/badges/static/images/badges/pt-br_badge_web_generic.png" alt="Disponível no Google Play" />
+  </a>
 </nav>
 
 <!-- HERO -->
@@ -328,55 +347,17 @@
     <h1>Construa hábitos.<br/><em>Como um atleta.</em><br/>Locked In.</h1>
     <p>Inspirado na mentalidade dos atletas de elite. Cada dia completado é uma cesta. Cada sequência, uma vitória que vale a pena proteger.</p>
     <div class="hero-ctas">
-      <a class="btn-primary" href="#download">⬇ Baixar para Android</a>
+      <a class="hero-badge-link" href="https://play.google.com/store/apps/details?id=br.fdrapps.lockedin&hl=pt_BR" target="_blank" rel="noopener" aria-label="Disponível no Google Play">
+        <img src="https://play.google.com/intl/pt-br/badges/static/images/badges/pt-br_badge_web_generic.png" alt="Disponível no Google Play" />
+      </a>
       <a class="btn-secondary" href="#features">Ver funcionalidades</a>
     </div>
 
-    <div class="hero-mockup">
-      <div class="mockup-header">
-        <span class="mockup-title">Hoje, quinta-feira</span>
-        <span class="mockup-date">3/4 cestas</span>
-      </div>
-      <div class="mockup-habit">
-        <div class="habit-left">
-          <span class="habit-icon">🏃</span>
-          <div>
-            <div class="habit-name">Correr 30 min</div>
-            <div class="habit-streak">🔥 14 dias</div>
-          </div>
-        </div>
-        <div class="habit-check done"></div>
-      </div>
-      <div class="mockup-habit">
-        <div class="habit-left">
-          <span class="habit-icon">📚</span>
-          <div>
-            <div class="habit-name">Leitura</div>
-            <div class="habit-streak">🔥 7 dias</div>
-          </div>
-        </div>
-        <div class="habit-check done"></div>
-      </div>
-      <div class="mockup-habit">
-        <div class="habit-left">
-          <span class="habit-icon">🧘</span>
-          <div>
-            <div class="habit-name">Meditação</div>
-            <div class="habit-streak">🔥 3 dias</div>
-          </div>
-        </div>
-        <div class="habit-check done"></div>
-      </div>
-      <div class="mockup-habit">
-        <div class="habit-left">
-          <span class="habit-icon">💧</span>
-          <div>
-            <div class="habit-name">Beber água</div>
-            <div class="habit-streak">⏳ pendente</div>
-          </div>
-        </div>
-        <div class="habit-check pending"></div>
-      </div>
+    <div class="hero-video" data-reveal>
+      <video id="heroVideo" src="vsl-lockedin.mp4" preload="metadata" playsinline></video>
+      <button class="video-play" id="videoPlayBtn" type="button" aria-label="Assistir vídeo do app">
+        <span class="video-play-icon">▶</span>
+      </button>
     </div>
 
     <div class="hero-pills">
@@ -391,21 +372,21 @@
 <!-- POR QUE LOCKED IN -->
 <section id="porque">
   <div class="container">
-    <p class="section-label">Por que existe</p>
-    <h2 class="section-title">A mentalidade certa.<br/>As ferramentas certas.</h2>
-    <p class="section-sub">A maioria dos apps te distrai, te cobra ou te vigia. Locked In resolve os três de uma vez — sem concessões.</p>
+    <p class="section-label" data-reveal>Por que existe</p>
+    <h2 class="section-title" data-reveal>A mentalidade certa.<br/>As ferramentas certas.</h2>
+    <p class="section-sub" data-reveal>A maioria dos apps te distrai, te cobra ou te vigia. Locked In resolve os três de uma vez — sem concessões.</p>
     <div class="porque-grid">
-      <div class="porque-card">
+      <div class="porque-card" data-reveal>
         <div class="porque-icon">🔥</div>
         <h3>Streaks que motivam</h3>
         <p>Acompanhe quantos dias consecutivos você manteve cada hábito. Perder a sequência dói — e é exatamente isso que te faz voltar amanhã.</p>
       </div>
-      <div class="porque-card">
+      <div class="porque-card" data-reveal>
         <div class="porque-icon">🔒</div>
         <h3>Seus dados são seus</h3>
         <p>Nenhum servidor recebe seus hábitos. Tudo fica salvo localmente no SQLite do seu celular — nem eu, o desenvolvedor, tenho acesso.</p>
       </div>
-      <div class="porque-card">
+      <div class="porque-card" data-reveal>
         <div class="porque-icon">⚡</div>
         <h3>Interface sem distrações</h3>
         <p>Sem gamificação artificial, sem notificações para comprar o premium. Cada elemento existe por um motivo. Apenas você e seus hábitos.</p>
@@ -417,36 +398,36 @@
 <!-- FUNCIONALIDADES -->
 <section id="features">
   <div class="container">
-    <p class="section-label">Funcionalidades</p>
-    <h2 class="section-title">Tudo que você precisa.<br/>Nada que você não precisa.</h2>
-    <p class="section-sub">Criado para quem quer focar em construir hábitos, não em aprender um app complexo.</p>
+    <p class="section-label" data-reveal>Funcionalidades</p>
+    <h2 class="section-title" data-reveal>Tudo que você precisa.<br/>Nada que você não precisa.</h2>
+    <p class="section-sub" data-reveal>Criado para quem quer focar em construir hábitos, não em aprender um app complexo.</p>
     <div class="features-grid">
-      <div class="feature-card">
+      <div class="feature-card" data-reveal>
         <div class="feature-icon">✏️</div>
         <h3>Hábitos personalizados</h3>
         <p>Crie quantos hábitos quiser com ícone, nome e frequência customizada — diário, dias da semana, fins de semana ou X vezes por semana.</p>
       </div>
-      <div class="feature-card">
+      <div class="feature-card" data-reveal>
         <div class="feature-icon">🔥</div>
         <h3>Streaks precisos</h3>
         <p>Streak atual, recorde histórico e total de completions. Calculado com precisão para cada tipo de frequência — sem bugs, sem surpresas.</p>
       </div>
-      <div class="feature-card">
+      <div class="feature-card" data-reveal>
         <div class="feature-icon">🔔</div>
         <h3>Lembretes no horário certo</h3>
         <p>Configure um lembrete por hábito e escolha os dias da semana. As notificações chegam no horário exato — sem spam, sem configuração complicada.</p>
       </div>
-      <div class="feature-card">
+      <div class="feature-card" data-reveal>
         <div class="feature-icon">📊</div>
         <h3>Analytics que fazem sentido</h3>
         <p>Taxa de conclusão do dia, maiores streaks ativos e progresso geral. Sem números desnecessários — só o que importa para a próxima decisão.</p>
       </div>
-      <div class="feature-card">
+      <div class="feature-card" data-reveal>
         <div class="feature-icon">📱</div>
         <h3>Widget na tela inicial</h3>
         <p>Acompanhe seus hábitos sem abrir o app. O widget 4×2 mostra seu placar do dia diretamente na tela inicial, no estilo de um painel de basquete.</p>
       </div>
-      <div class="feature-card">
+      <div class="feature-card" data-reveal>
         <div class="feature-icon">🗃️</div>
         <h3>Arquivo inteligente</h3>
         <p>Pausou um hábito? Archive sem perder o histórico. Pode restaurar quando quiser, com todo o progresso anterior intacto.</p>
@@ -458,25 +439,25 @@
 <!-- COMO FUNCIONA -->
 <section id="como">
   <div class="container">
-    <p class="section-label">Como usar</p>
-    <h2 class="section-title">Comece em 30 segundos</h2>
-    <p class="section-sub">Sem tutorial obrigatório, sem configuração complexa. Entre na quadra e jogue.</p>
+    <p class="section-label" data-reveal>Como usar</p>
+    <h2 class="section-title" data-reveal>Comece em 30 segundos</h2>
+    <p class="section-sub" data-reveal>Sem tutorial obrigatório, sem configuração complexa. Entre na quadra e jogue.</p>
     <div class="steps">
-      <div class="step">
+      <div class="step" data-reveal>
         <div class="step-num">1</div>
         <div class="step-content">
           <h3>Instale e abra — sem cadastro</h3>
           <p>Baixe o app, abra. Pronto. Não pedimos e-mail, senha nem permissões desnecessárias. Você vai direto para a tela principal.</p>
         </div>
       </div>
-      <div class="step">
+      <div class="step" data-reveal>
         <div class="step-num">2</div>
         <div class="step-content">
           <h3>Crie seus hábitos</h3>
           <p>Dê um nome, escolha um ícone e defina a frequência. Adicione um lembrete se quiser. Leva menos de 1 minuto por hábito.</p>
         </div>
       </div>
-      <div class="step">
+      <div class="step" data-reveal>
         <div class="step-num">3</div>
         <div class="step-content">
           <h3>Converta a cesta todo dia</h3>
@@ -490,10 +471,10 @@
 <!-- COMPARAÇÃO -->
 <section id="comparacao">
   <div class="container">
-    <p class="section-label">Comparação</p>
-    <h2 class="section-title">Por que Locked In?</h2>
-    <p class="section-sub">Compare com as alternativas e veja o que faz o Locked In ser diferente.</p>
-    <div class="table-wrap">
+    <p class="section-label" data-reveal>Comparação</p>
+    <h2 class="section-title" data-reveal>Por que Locked In?</h2>
+    <p class="section-sub" data-reveal>Compare com as alternativas e veja o que faz o Locked In ser diferente.</p>
+    <div class="table-wrap" data-reveal>
       <table>
         <thead>
           <tr>
@@ -548,7 +529,7 @@
 
 <!-- PRIVACIDADE CALLOUT -->
 <section id="privacidade">
-  <div class="priv-inner">
+  <div class="priv-inner" data-reveal>
     <div class="priv-icon">🛡️</div>
     <h2>Privacidade não é feature — é princípio</h2>
     <p>Nenhuma conta. Nenhum servidor. Todos os seus hábitos e histórico ficam armazenados localmente no seu dispositivo. O Locked In não coleta, não sincroniza e não vende nenhum dado seu.</p>
@@ -564,16 +545,12 @@
 
 <!-- CTA FINAL -->
 <section id="download">
-  <div class="container">
+  <div class="container" data-reveal>
     <h2>O jogo começa hoje.<br/>Entre na zona.</h2>
     <p>O jogo começa quando você bate o primeiro hábito do dia. Grátis. Sem cadastro. Seus dados ficam com você. Locked In.</p>
     <div class="download-ctas">
-      <a class="btn-play" href="https://play.google.com/store/apps/details?id=br.fdrapps.lockedin&hl=pt_BR" target="_blank" rel="noopener">
-        <span class="btn-play-icon">▶</span>
-        <div class="btn-play-text">
-          <small>Disponível no</small>
-          <strong>Google Play</strong>
-        </div>
+      <a class="play-badge-link" href="https://play.google.com/store/apps/details?id=br.fdrapps.lockedin&hl=pt_BR" target="_blank" rel="noopener" aria-label="Disponível no Google Play">
+        <img src="https://play.google.com/intl/pt-br/badges/static/images/badges/pt-br_badge_web_generic.png" alt="Disponível no Google Play" />
       </a>
     </div>
   </div>
@@ -593,6 +570,62 @@
     <a href="mailto:felipereis755@gmail.com">Contato</a>
   </p>
 </footer>
+
+<div class="sticky-cta" id="stickyCta">
+  <a href="https://play.google.com/store/apps/details?id=br.fdrapps.lockedin&hl=pt_BR" target="_blank" rel="noopener" aria-label="Disponível no Google Play">
+    <img src="https://play.google.com/intl/pt-br/badges/static/images/badges/pt-br_badge_web_generic.png" alt="Disponível no Google Play" />
+  </a>
+</div>
+
+<script>
+  (function () {
+    // reveal on scroll
+    var revealEls = document.querySelectorAll('[data-reveal]');
+    if (!('IntersectionObserver' in window)) {
+      revealEls.forEach(function (el) { el.classList.add('in-view'); });
+    } else {
+      var groupCounters = {};
+      var revealObserver = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('in-view');
+            revealObserver.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.15, rootMargin: '0px 0px -10% 0px' });
+      revealEls.forEach(function (el) {
+        var group = (el.closest('section') || {}).id || 'default';
+        groupCounters[group] = groupCounters[group] || 0;
+        el.style.transitionDelay = Math.min(groupCounters[group] * 60, 240) + 'ms';
+        groupCounters[group]++;
+        revealObserver.observe(el);
+      });
+    }
+
+    // hero video play button
+    var video = document.getElementById('heroVideo');
+    var playBtn = document.getElementById('videoPlayBtn');
+    if (video && playBtn) {
+      playBtn.addEventListener('click', function () {
+        video.controls = true;
+        video.play();
+        playBtn.classList.add('hidden');
+      });
+      video.addEventListener('pause', function () { playBtn.classList.remove('hidden'); });
+      video.addEventListener('ended', function () { playBtn.classList.remove('hidden'); });
+    }
+
+    // sticky mobile CTA, visible once hero scrolls out of view
+    var hero = document.getElementById('hero');
+    var stickyCta = document.getElementById('stickyCta');
+    if (hero && stickyCta && 'IntersectionObserver' in window) {
+      var heroObserver = new IntersectionObserver(function (entries) {
+        stickyCta.classList.toggle('visible', !entries[0].isIntersecting);
+      }, { threshold: 0 });
+      heroObserver.observe(hero);
+    }
+  })();
+</script>
 
 </body>
 </html>
