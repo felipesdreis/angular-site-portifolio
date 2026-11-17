@@ -1,6 +1,7 @@
 {
   "rewrites": [
     { "source": "/locked-in", "destination": "/assets/locked-in/index.html" },
+    { "source": "/grease", "destination": "/assets/grease/index.html" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

@@ -74,3 +74,4 @@ src/app/
 - O arquivo `src/assets/blog/blog.md` está vazio — remanescente da tentativa anterior.
 - A rota `/shared` redireciona para uma pasta específica do Google Drive (ID: `1K6036Zt9cRQwCNB_krFez8YJG2KjH6Hp`).
 - **`src/assets/locked-in/index.html`** é uma landing estática solta ("Locked In"), sem rota Angular apontando pra ela — só acessível via URL direta do asset. Tem paleta/fontes próprias (laranja + Bebas Neue) não relacionadas ao resto do site.
+- **`src/assets/grease/index.html`** é uma página estática solta (tracker pessoal "Grease the Groove"), servida em `/grease` por rewrite no `vercel.json` — mesmo padrão do `locked-in`. Arquivo único, sem dependências; dados em `localStorage` (chave `gtg-v1`). Em `ng serve` só abre por `/assets/grease/index.html`.
