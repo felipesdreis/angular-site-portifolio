@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<base href="/assets/ride-planner/">
+<base href="/assets/ride-planner/">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ride Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<aside aria-label="Controles da rota">
+  <h1 class="brand"><i data-lucide="route" aria-hidden="true"></i>Ride Planner</h1>
+
+  <section id="g-route" class="group" aria-label="Rota">
+    <input id="name" placeholder="Rota sem nome" aria-label="Nome da rota">
+    <div id="stats" class="computer">
+      <div class="stat main"><span>Distância</span><p><b id="dist">0,0</b><small>km</small></p></div>
+      <div class="stat"><span>Subida</span><p><b id="up">0</b><small>m</small></p></div>
+      <div class="stat"><span>Descida</span><p><b id="down">0</b><small>m</small></p></div>
+    </div>
+    <p id="summary" class="sr-only" aria-live="polite"></p>
+  </section>
+
+  <form id="search" role="search">
+    <input id="q" type="search" placeholder="Buscar" aria-label="Buscar local">
+    <button type="submit" class="icon" aria-label="Buscar"><i data-lucide="search" aria-hidden="true"></i></button>
+  </form>
+
+  <section id="g-modes" class="group">
+    <h2 id="modes-h">Modo de roteamento <span id="mode-name">Bike</span></h2>
+    <div id="modes" role="group" aria-labelledby="modes-h">
+      <button data-m="trekking" title="Bike" aria-label="Bike"><i data-lucide="bike" aria-hidden="true"></i></button>
+      <button data-m="fastbike" title="Speed (asfalto)" aria-label="Speed"><i data-lucide="gauge" aria-hidden="true"></i></button>
+      <button data-m="hiking-mountain" title="A pé" aria-label="A pé"><i data-lucide="footprints" aria-hidden="true"></i></button>
+      <button data-m="car-fast" title="Carro" aria-label="Carro"><i data-lucide="car" aria-hidden="true"></i></button>
+      <button data-m="straight" title="Linha reta" aria-label="Linha reta"><i data-lucide="pen-line" aria-hidden="true"></i></button>
+    </div>
+  </section>
+
+  <section id="g-edit" class="group">
+    <h2>Editar</h2>
+    <div class="grid edit">
+      <button id="add-center" class="wide" aria-label="Ponto no centro do mapa"><i data-lucide="crosshair" aria-hidden="true"></i><span class="long">Ponto no centro do mapa</span><span class="short">Centro</span></button>
+      <button id="undo"><i data-lucide="undo-2" aria-hidden="true"></i>Desfazer</button>
+      <button id="clear" class="danger"><i data-lucide="eraser" aria-hidden="true"></i>Limpar</button>
+      <button id="reverse" aria-describedby="need2"><i data-lucide="arrow-left-right" aria-hidden="true"></i>Inverter</button>
+      <button id="outback" aria-describedby="need2"><i data-lucide="repeat" aria-hidden="true"></i>Ida e volta</button>
+    </div>
+    <p id="need2" class="note"></p>
+  </section>
+
+  <section id="g-files" class="group">
+    <h2>Arquivo</h2>
+    <div class="grid">
+      <button id="export" class="primary wide" aria-describedby="need2"><i data-lucide="download" aria-hidden="true"></i>Exportar GPX</button>
+      <button id="import-btn" class="wide"><i data-lucide="upload" aria-hidden="true"></i>Importar GPX</button>
+      <input type="file" id="import" accept=".gpx" hidden>
+    </div>
+  </section>
+
+  <details open>
+    <summary>Como usar</summary>
+    <ul id="hint-list" class="hint" role="list">
+      <li><b>Clique ou toque</b> no mapa para adicionar pontos</li>
+      <li><b>Arraste</b> um ponto para mover. Com o ponto em foco, use as <b>setas</b></li>
+      <li><b>Toque, clique ou Enter</b> num ponto para remover ou fechar o loop. <b>Delete</b> remove o ponto em foco</li>
+      <li><b>Arraste a linha</b> para criar um ponto no meio</li>
+      <li><kbd>Ctrl</kbd> <kbd>Z</kbd> desfaz</li>
+    </ul>
+  </details>
+</aside>
+<main>
+  <div id="map" role="region" aria-label="Mapa da rota" aria-describedby="hint-list">
+    <div id="status" role="status"></div>
+    <div id="chip" aria-hidden="true"></div>
+  </div>
+  <canvas id="prof" tabindex="0" role="slider" aria-label="Perfil de elevação. Use as setas para percorrer a rota."
+          aria-valuemin="0" aria-valuemax="0" aria-valuenow="0" aria-valuetext="Rota vazia"></canvas>
+</main>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

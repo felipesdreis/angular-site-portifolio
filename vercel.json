@@ -2,6 +2,9 @@
   "rewrites": [
     { "source": "/locked-in", "destination": "/assets/locked-in/index.html" },
     { "source": "/grease", "destination": "/assets/grease/index.html" },
+    { "source": "/ride-planner", "destination": "/assets/ride-planner/index.html" },
+    { "source": "/territorios", "destination": "/assets/territorios/index.html" },
+    { "source": "/extras", "destination": "/assets/extras/index.html" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
