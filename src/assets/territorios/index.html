@@ -5,75 +5,163 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Cartões de Território</title>
 <link rel="icon" href="icone.svg" type="image/svg+xml">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Libre+Baskerville:wght@400;700&family=Archivo+Narrow:wght@500&family=Archivo:wght@600&display=swap">
+<!-- fontes só do cartão (a interface usa a fonte do sistema) -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&family=Libre+Baskerville:wght@400;700&family=Archivo+Narrow:wght@500&family=Archivo:wght@600&display=swap">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <style>
 :root{
-  --bg:#e9eef1; --surface:#ffffff; --fg:#16222b; --muted:#5a6a76; --line:#d3dce2;
-  --accent:#1f6f9a; --accent-fg:#ffffff; --danger:#b3261e; --hint:#fff6d6; --hint-fg:#5a4500;
-  --ui:"IBM Plex Sans",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,monospace;
+  --bg:#f5f5f7; --desk:#e8e8ed; --surface:#ffffff; --fill:rgba(118,118,128,.12); --fill-2:rgba(118,118,128,.2);
+  --fg:#1d1d1f; --muted:#6e6e73; --line:rgba(0,0,0,.08);
+  --accent:#1f6f9a; --accent-fg:#fff; --danger:#c62828; --ok:#16a34a;
+  --glass:rgba(245,245,247,.72); --shadow:0 1px 2px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.06);
+  --ui:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI Variable Text","Segoe UI",system-ui,sans-serif;
+  --r:12px; --ease:cubic-bezier(.22,1,.36,1); /* uma curva só, sem overshoot */
+  color-scheme:light;
 }
 @media (prefers-color-scheme:dark){:root{
-  --bg:#0e151a; --surface:#16212a; --fg:#e3ecf1; --muted:#94a5b1; --line:#2a3945;
-  --accent:#6cb6dd; --accent-fg:#0b1a22; --danger:#ff8a80; --hint:#3a3210; --hint-fg:#f3dd8c; color-scheme:dark}}
+  --bg:#111113; --desk:#0a0a0b; --surface:#1c1c1e; --fill:rgba(118,118,128,.24); --fill-2:rgba(118,118,128,.36);
+  --fg:#f5f5f7; --muted:#98989d; --line:rgba(255,255,255,.09);
+  --accent:#6cb6dd; --accent-fg:#0b1a22; --danger:#e5484d; --ok:#4cc38a;
+  --glass:rgba(28,28,30,.72); --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.35);
+  color-scheme:dark}}
 *{box-sizing:border-box}
-html,body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--ui);font-size:14px}
+html,body{margin:0;background:var(--bg);color:var(--fg);font:400 14px/1.4 var(--ui);-webkit-font-smoothing:antialiased}
 [hidden]{display:none!important}
-.app{padding:14px max(16px,env(safe-area-inset-left,0px)) 32px;max-width:1440px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
-.top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.top h1{font-size:18px;font-weight:600;margin:0 8px 0 0}
-.tabs{display:flex;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:3px;gap:3px}
-.tabs button{border:0;background:transparent}
-.tabs button[aria-selected=true]{background:var(--accent);color:var(--accent-fg)}
+
+/* ---------- barra superior translúcida ---------- */
+header{position:sticky;top:0;z-index:1000;background:var(--glass);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);
+  border-bottom:1px solid var(--line)}
+.hdr{max-width:1480px;margin:0 auto;padding:12px max(24px,env(safe-area-inset-left,0px));display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:8px;margin-right:8px}
+.brand img{width:24px;height:24px;border-radius:6px}
+.brand h1{font-size:15px;font-weight:600;margin:0;white-space:nowrap}
+/* assinatura: o número do território na serifa do cartão */
+.brand .num{font:700 15px "Libre Baskerville",Georgia,serif;color:var(--muted);margin-left:4px;padding-left:12px;border-left:1px solid var(--line);white-space:nowrap}
+.brand .num:empty{display:none}
+.brand .num b{color:var(--fg)}
 .spacer{flex:1}
-#status{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
-.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
-.bar select{min-width:220px}
-.main{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:16px;align-items:start}
-@media (max-width:900px){.main{grid-template-columns:minmax(0,1fr)}}
-.stage{display:flex;flex-direction:column;gap:8px;min-width:0}
-.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.hint{background:var(--hint);color:var(--hint-fg);border-radius:6px;padding:6px 10px;font-size:13px}
-.paper{background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.12),0 8px 24px rgba(0,0,0,.10);border-radius:2px;overflow:hidden}
-#card{display:block;width:100%;height:auto;touch-action:none;user-select:none;-webkit-user-select:none}
-#map{height:min(72vh,720px);min-height:380px;border-radius:10px;border:1px solid var(--line)}
-.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;display:flex;flex-direction:column}
-.panel section{padding:14px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:9px}
-.panel section:first-child{border-top:0}
-.panel h2{margin:0;font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
-label.check{flex-direction:row;align-items:center;gap:8px;color:var(--fg)}
-input[type=text],input[type=search],select{font:inherit;font-size:14px;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:7px 9px;min-width:0}
-input[type=color]{width:100%;height:34px;border:1px solid var(--line);border-radius:6px;background:var(--bg);padding:2px;cursor:pointer}
-input[type=range]{width:100%;accent-color:var(--accent)}
-.row{display:flex;gap:8px;align-items:center}
+#status{font-size:12px;color:var(--muted);display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+#status::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--ok)}
+#status.erro{color:var(--danger)}#status.erro::before{background:var(--danger)}
+
+/* controle segmentado: o indicador desliza só com CSS (:has) */
+.tabs{position:relative;display:grid;grid-template-columns:1fr 1fr;background:var(--fill);border-radius:10px;padding:2px;min-width:200px}
+.tabs::before{content:"";position:absolute;inset:2px auto 2px 2px;width:calc(50% - 2px);border-radius:8px;background:var(--surface);
+  box-shadow:0 1px 3px rgba(0,0,0,.12),0 0 0 .5px rgba(0,0,0,.04);transition:transform .35s var(--ease)}
+.tabs:has(#tab-btn-cartao[aria-selected=true])::before{transform:translateX(100%)}
+.tabs button{position:relative;border:0;background:transparent;padding:0 16px;height:28px;border-radius:8px;font-weight:500;color:var(--muted)}
+.tabs button[aria-selected=true]{color:var(--fg)}
+.tabs button:hover{background:transparent}
+
+.terr{display:flex;align-items:center;gap:8px}
+.terr select{min-width:230px;font-weight:500}
+
+/* menu "Mais" (popover nativo, ancorado no botão) */
+#b-mais{anchor-name:--mais;width:32px;padding:0}
+#menu{position-anchor:--mais;inset:auto;top:anchor(bottom);right:anchor(right);margin:8px 0 0;min-width:220px;padding:4px;
+  border:1px solid var(--line);border-radius:12px;background:var(--glass);backdrop-filter:blur(30px) saturate(180%);-webkit-backdrop-filter:blur(30px) saturate(180%);
+  box-shadow:0 10px 40px rgba(0,0,0,.18),0 2px 8px rgba(0,0,0,.08);color:var(--fg);
+  transform-origin:top right;transition:opacity .18s var(--ease),transform .25s var(--ease),display .25s allow-discrete,overlay .25s allow-discrete}
+#menu:popover-open{opacity:1;transform:none}
+@starting-style{#menu:popover-open{opacity:0;transform:scale(.94) translateY(-4px)}}
+#menu:not(:popover-open){opacity:0;transform:scale(.96)}
+#menu button{display:flex;width:100%;justify-content:flex-start;background:transparent;border-radius:8px;padding:0 12px;font-weight:400}
+#menu button:hover{background:var(--accent);color:var(--accent-fg)}
+#menu button.danger:hover{background:var(--danger);color:#fff}
+#menu hr{border:0;border-top:1px solid var(--line);margin:4px 8px}
+#menu .lbl{font-size:12px;font-weight:500;color:var(--muted);padding:8px 12px 4px}
+
+/* ---------- layout ---------- */
+.app{max-width:1480px;margin:0 auto;padding:20px max(24px,env(safe-area-inset-left,0px)) 40px}
+.main{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start}
+.main:not([hidden]){animation:entra .3s var(--ease)}
+@keyframes entra{from{opacity:0;transform:translateY(4px)}}
+@media (max-width:960px){.main{grid-template-columns:minmax(0,1fr)}}
+.stage{display:flex;flex-direction:column;gap:12px;min-width:0;position:sticky;top:76px}
+@media (max-width:960px){.stage{position:static}}
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.hint{font-size:13px;color:var(--muted);background:var(--surface);border-radius:8px;padding:8px 12px;box-shadow:var(--shadow)}
+.desk{background:var(--desk);border-radius:16px;padding:clamp(12px,2.5vw,32px)}
+/* ícones: um traço só, na cor do texto */
+.i{width:16px;height:16px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.paper{background:#fff;border-radius:4px;overflow:hidden;box-shadow:0 1px 1px rgba(0,0,0,.06),0 6px 18px rgba(0,0,0,.08),0 24px 48px -12px rgba(0,0,0,.16)}
+#card{display:block;width:100%;height:auto;touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab}
+#card:active{cursor:grabbing}
+#card [data-id]{cursor:move}
+#map{height:min(74vh,760px);min-height:400px;border-radius:12px;overflow:hidden;box-shadow:var(--shadow)}
+
+/* ---------- inspetor (grupos arredondados) ---------- */
+.panel{display:flex;flex-direction:column;gap:16px}
+.panel section{background:var(--surface);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:12px;box-shadow:var(--shadow)}
+.panel section:empty{display:none}
+.panel h2{margin:0;font-size:13px;font-weight:600;color:var(--fg)}
+label{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:500;color:var(--muted)}
+label.check{flex-direction:row;align-items:center;gap:8px;color:var(--fg);font-size:13px;font-weight:400}
+label output,#escala-v{color:var(--fg);font-variant-numeric:tabular-nums}
+
+/* ---------- controles ---------- */
+input[type=text],input[type=search],select{font:inherit;font-size:13px;color:var(--fg);background:var(--fill);border:0;border-radius:8px;padding:0 12px;min-width:0;height:32px;
+  transition:box-shadow .15s}
+select{appearance:none;padding-right:32px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='14' viewBox='0 0 10 14'%3E%3Cpath d='M2 5l3-3 3 3M2 9l3 3 3-3' fill='none' stroke='%23888' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center}
+select option{background:var(--surface);color:var(--fg)}
+input[type=color]{width:100%;height:32px;border:0;border-radius:8px;background:var(--fill);padding:4px;cursor:pointer}
+input[type=color]::-webkit-color-swatch-wrapper{padding:0}
+input[type=color]::-webkit-color-swatch{border:0;border-radius:4px;box-shadow:inset 0 0 0 .5px rgba(0,0,0,.15)}
+input[type=color]::-moz-color-swatch{border:0;border-radius:4px}
+input[type=range]{width:100%;accent-color:var(--accent);margin:4px 0}
+input[type=checkbox]{accent-color:var(--accent);width:16px;height:16px;margin:0}
+.row{display:flex;gap:8px;align-items:flex-end}
 .row>*{flex:1;min-width:0}
 .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.btns{display:flex;gap:6px;flex-wrap:wrap}
-button{font:inherit;font-size:13px;font-weight:500;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:7px 11px;cursor:pointer}
-button:hover{border-color:var(--accent)}
-button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
-button.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+
+button{font:inherit;font-size:13px;font-weight:500;color:var(--fg);background:var(--fill);border:0;border-radius:8px;padding:0 12px;height:32px;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap;
+  transition:transform .16s var(--ease),background-color .16s,color .16s}
+button:hover{background:var(--fill-2)}
+/* resposta imediata no toque (pointer-down), soltura com curva suave */
+button:active:not(:disabled){transform:scale(.97);transition-duration:80ms}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 45%,transparent)}
+button.primary{background:var(--accent);color:var(--accent-fg)}
+button.primary:hover{background:color-mix(in srgb,var(--accent) 88%,#000)}
 button.danger{color:var(--danger)}
-button.armed{background:var(--danger)!important;color:#fff!important;border-color:var(--danger)!important}
-button:disabled{opacity:.45;cursor:default}
-.small{font-size:12px;color:var(--muted);line-height:1.45;margin:0}
-.tipo{display:grid;grid-template-columns:38px minmax(0,1fr) 92px 30px;gap:6px;align-items:center}
-.tipo button{padding:6px 0}
-.qlist{display:flex;flex-wrap:wrap;gap:6px}
-.qlist span{display:inline-flex;align-items:center;gap:4px;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:3px 4px 3px 9px;font-variant-numeric:tabular-nums}
-.qlist button{padding:1px 7px;border:0;background:transparent;color:var(--danger)}
+button.armed{background:var(--danger)!important;color:#fff!important}
+button:disabled{opacity:.4;cursor:default}
+.panel section>button{width:100%}
+.small{font-size:12px;color:var(--muted);line-height:1.5;margin:0}
+
+.tipo{display:grid;grid-template-columns:36px minmax(0,1fr) 96px 32px;gap:8px;align-items:center}
+.tipo button{padding:0}
+.qlist{display:flex;flex-wrap:wrap;gap:8px}
+.qlist span{display:inline-flex;align-items:center;gap:4px;background:var(--fill);border-radius:8px;padding:4px 4px 4px 12px;font-size:12px;font-variant-numeric:tabular-nums}
+.qlist button{height:24px;width:24px;padding:0;border-radius:4px;background:transparent;color:var(--danger)}
+.qlist button:hover{background:var(--fill-2)}
+
+/* Leaflet */
+.leaflet-container{font-family:var(--ui)}
 .qlabel{background:transparent;border:0;box-shadow:none;font:700 15px var(--ui);color:#0c3550;text-shadow:0 0 3px #fff,0 0 3px #fff}
 .qlabel:before{display:none}
+
+/* SVG do cartão (seleção) */
 .sel-box{fill:none;stroke:#1f6f9a;stroke-width:1.5;stroke-dasharray:5 4;pointer-events:none}
 .handle{fill:#fff;stroke:#1f6f9a;stroke-width:2.5;cursor:grab}
-#card [data-id]{cursor:move}
+
+/* ---------- acessibilidade ---------- */
+@media (prefers-reduced-motion:reduce){
+  *,*::before{transition-duration:0s!important;animation:none!important}
+  button:active:not(:disabled){transform:none}
+}
+@media (prefers-reduced-transparency:reduce){header,#menu{background:var(--surface);backdrop-filter:none;-webkit-backdrop-filter:none}}
+@media (prefers-contrast:more){:root{--line:currentColor}.panel section,.hint{box-shadow:0 0 0 1px var(--fg)}}
+
+/* ---------- impressão ---------- */
 #print{display:none}
 @media print{
   @page{size:A4 landscape;margin:10mm}
   html,body{background:#fff}
-  .app{display:none}
+  header,.app{display:none}
   #print{display:block}
   #print svg{display:block;width:100%;height:auto;break-after:page;page-break-after:always}
   #print svg:last-child{break-after:auto;page-break-after:auto}
@@ -81,35 +169,43 @@ button:disabled{opacity:.45;cursor:default}
 </style>
 </head>
 <body>
-<div class="app">
-  <div class="top">
-    <h1>Cartões de Território</h1>
+<header>
+  <div class="hdr">
+    <div class="brand"><img src="icone.svg" alt=""><h1>Cartões de Território</h1><span class="num" id="brand-num"></span></div>
     <div class="tabs" role="tablist">
-      <button role="tab" id="tab-btn-mapa" aria-selected="false">1 · Mapa</button>
-      <button role="tab" id="tab-btn-cartao" aria-selected="true">2 · Cartão</button>
+      <button role="tab" id="tab-btn-mapa" aria-selected="false">Mapa</button>
+      <button role="tab" id="tab-btn-cartao" aria-selected="true">Cartão</button>
     </div>
     <span class="spacer"></span>
     <span id="status">salvo neste navegador</span>
-  </div>
-
-  <div class="bar">
-    <select id="sel-terr" aria-label="Território"></select>
-    <button id="b-novo">Novo</button>
-    <button id="b-dup">Duplicar</button>
-    <button id="b-del" class="danger">Excluir</button>
-    <span class="spacer"></span>
-    <button id="b-print" class="primary">Imprimir cartão</button>
-    <button id="b-print-all">Imprimir todos</button>
-    <button id="b-png">Baixar PNG</button>
-    <button id="b-backup">Salvar backup</button>
-    <button id="b-restore">Abrir backup</button>
+    <div class="terr">
+      <select id="sel-terr" aria-label="Território"></select>
+      <button id="b-novo" title="Novo território"><svg class="i" viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"/></svg>Novo</button>
+    </div>
+    <button id="b-print" class="primary">Imprimir</button>
+    <button id="b-mais" popovertarget="menu" aria-label="Mais ações" title="Mais ações"><svg class="i" viewBox="0 0 24 24" style="stroke-width:3"><path d="M5 12h.01M12 12h.01M19 12h.01"/></svg></button>
+    <div id="menu" popover>
+      <div class="lbl">Território</div>
+      <button id="b-dup">Duplicar território</button>
+      <button id="b-del" class="danger">Excluir território</button>
+      <hr>
+      <div class="lbl">Exportar</div>
+      <button id="b-print-all">Imprimir todos</button>
+      <button id="b-png">Baixar PNG</button>
+      <hr>
+      <div class="lbl">Backup</div>
+      <button id="b-backup">Salvar backup</button>
+      <button id="b-restore">Abrir backup…</button>
+    </div>
     <input type="file" id="f-restore" accept=".json,application/json" hidden>
   </div>
+</header>
 
+<div class="app">
   <!-- ===== ABA MAPA ===== -->
   <div class="main" id="tab-mapa" hidden>
     <div class="stage">
-      <div class="hint" id="map-hint">Procure o bairro, clique em "Desenhar quadra" e clique nos cantos da quadra no mapa.</div>
+      <div class="toolbar"><div class="hint" id="map-hint">Procure o bairro, clique em "Desenhar quadra" e clique nos cantos da quadra no mapa.</div></div>
       <div id="map"></div>
     </div>
     <aside class="panel">
@@ -123,7 +219,7 @@ button:disabled{opacity:.45;cursor:default}
       <section>
         <h2>Quadras no mapa</h2>
         <div class="btns">
-          <button id="b-desenhar" class="primary">Desenhar quadra</button>
+          <button id="b-desenhar">Desenhar quadra</button>
           <button id="b-desenhar-area">Desenhar área verde</button>
           <button id="b-concluir" hidden>Concluir</button>
           <button id="b-desfazer-ponto" hidden>Apagar último ponto</button>
@@ -133,8 +229,8 @@ button:disabled{opacity:.45;cursor:default}
       </section>
       <section>
         <h2>Gerar cartão</h2>
-        <label><span>Espaço das ruas: <output id="o-espaco">16</output> px</span><input type="range" id="r-espaco" min="0" max="50" value="16" oninput="$('#o-espaco').value=this.value"></label>
-        <label><span>Girar mapa: <output id="o-giro">0</output>° (sentido horário)</span><input type="range" id="r-giro" min="-180" max="180" value="0" oninput="$('#o-giro').value=this.value;cur().mapa.giro=+this.value;save()"></label>
+        <label><span>Espaço das ruas · <output id="o-espaco">16</output> px</span><input type="range" id="r-espaco" min="0" max="50" value="16" oninput="$('#o-espaco').value=this.value"></label>
+        <label><span>Girar mapa · <output id="o-giro">0</output>° (sentido horário)</span><input type="range" id="r-giro" min="-180" max="180" value="0" oninput="$('#o-giro').value=this.value;cur().mapa.giro=+this.value;save()"></label>
         <button id="b-alinhar">Alinhar às quadras</button>
         <label class="check"><input type="checkbox" id="c-ruas" checked> Buscar nomes das ruas no OpenStreetMap</label>
         <button id="b-gerar" class="primary">Gerar cartão a partir do mapa</button>
@@ -148,12 +244,13 @@ button:disabled{opacity:.45;cursor:default}
   <div class="main" id="tab-cartao">
     <div class="stage">
       <div class="toolbar">
-        <button id="b-undo" title="Ctrl+Z">Desfazer</button>
+        <button id="b-undo" title="Ctrl+Z"><svg class="i" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>Desfazer</button>
         <div class="hint" id="hint">Clique numa quadra para editar. Arraste os pontos brancos para mudar o formato.</div>
       </div>
-      <div class="paper"><svg id="card" viewBox="0 0 1000 640" xmlns="http://www.w3.org/2000/svg"></svg></div>
+      <div class="desk"><div class="paper"><svg id="card" viewBox="0 0 1000 640" xmlns="http://www.w3.org/2000/svg"></svg></div></div>
     </div>
     <aside class="panel">
+      <section id="props"></section>
       <section>
         <h2>Cartão</h2>
         <div class="row">
@@ -166,30 +263,36 @@ button:disabled{opacity:.45;cursor:default}
           <label>Quadras <input type="color" id="f-quadra"></label>
         </div>
         <button id="b-aplicar">Pintar todas as quadras com essa cor</button>
+        <label><span>Tamanho do mapa · <span id="escala-v">100%</span></span><input type="range" id="f-escala" min="40" max="160" step="1" value="100"></label>
       </section>
       <section>
         <h2>Adicionar</h2>
         <div class="btns">
-          <button data-add="quadra">+ Quadra</button>
-          <button data-add="area">+ Área verde</button>
-          <button data-add="rua">+ Nome de rua</button>
+          <button data-add="quadra"><svg class="i" viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"/></svg>Quadra</button>
+          <button data-add="area"><svg class="i" viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"/></svg>Área verde</button>
+          <button data-add="rua"><svg class="i" viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"/></svg>Nome de rua</button>
         </div>
         <div class="row">
           <select id="sel-tipo" aria-label="Tipo de referência"></select>
-          <button id="b-ref" class="primary">Colocar referência</button>
+          <button id="b-ref" style="flex:none">Colocar referência</button>
         </div>
       </section>
-      <section id="props"></section>
       <section>
-        <h2>Legenda · tipos de referência</h2>
+        <h2>Tipos de referência</h2>
         <div id="tipos" style="display:flex;flex-direction:column;gap:6px"></div>
-        <button id="b-tipo">+ Novo tipo</button>
+        <button id="b-tipo"><svg class="i" viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"/></svg>Novo tipo</button>
       </section>
     </aside>
   </div>
 </div>
 <div id="print"></div>
 
+<script>
+// v2: ícones (lucide) usados nos trechos gerados pelo JS
+const IX='<svg class="i" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>',
+  ICCW='<svg class="i" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8M3 3v5h5"/></svg>',
+  ICW='<svg class="i" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8M21 3v5h-5"/></svg>';
+</script>
 <script>
 const W=1000,H=640,NS='http://www.w3.org/2000/svg',KEY='territorios-v1';
 // estilos do cartão: usados na tela, na impressão e no PNG
@@ -235,7 +338,10 @@ function seed(){
   return {tipos:[{id:'agua',nome:"Caixa d'água",cor:'#26338f',icone:'casa'},{id:'cras',nome:'CRAS',cor:'#16a05a',icone:'casa'}],terr:[t],atual:t.id};
 }
 function valido(s){return s&&Array.isArray(s.terr)&&s.terr.length&&Array.isArray(s.tipos)}
-function load(){try{const s=JSON.parse(localStorage.getItem(KEY));return valido(s)?s:null}catch(e){return null}}
+// tipo.terr = território dono (null = global). Backups antigos: tipo usado em só um território passa a ser dele.
+function migrar(s){s.tipos.forEach(tp=>{if("terr" in tp)return;const us=s.terr.filter(t=>t.itens.some(i=>i.t==="ref"&&i.tipo===tp.id));tp.terr=us.length===1?us[0].id:null});return s}
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY));return valido(s)?migrar(s):null}catch(e){return null}}
+const meus=()=>st.tipos.filter(tp=>!tp.terr||tp.terr===st.atual);
 let st=load()||seed();
 let sel=null, drag=null, placing=null, hist=[];
 function save(){try{localStorage.setItem(KEY,JSON.stringify(st));$('#status').textContent='salvo neste navegador'}catch(e){$('#status').textContent='não foi possível salvar — faça um backup'}}
@@ -304,14 +410,16 @@ svg.addEventListener('pointerdown',e=>{
   const p=pt(e),t=cur();
   if(placing){snap();const it={id:uid(),t:'ref',tipo:placing,x:r1(p[0]),y:r1(p[1])};t.itens.push(it);placing=null;sel=it.id;setHint();render();props();save();return}
   const el=e.target.closest('[data-id]');
-  if(!el){sel=null;render();props();return}
+  if(!el){sel=null;drag={id:"*",last:p,moved:false};svg.setPointerCapture(e.pointerId);render();props();return} // fundo: arrasta o mapa todo
   sel=el.dataset.id;drag={id:sel,v:el.dataset.v!=null?+el.dataset.v:null,last:p,moved:false};
   svg.setPointerCapture(e.pointerId);render();props();
 });
 svg.addEventListener('pointermove',e=>{
   if(!drag)return;const p=pt(e),dx=p[0]-drag.last[0],dy=p[1]-drag.last[1];if(!dx&&!dy)return;
   if(!drag.moved){snap();drag.moved=true}
-  drag.last=p;const it=find(drag.id),t=cur();
+  drag.last=p;const t=cur();
+  if(drag.id==="*"){t.itens.forEach(i=>{if(i.pts)i.pts=i.pts.map(([x,y])=>[r1(x+dx),r1(y+dy)]);else{i.x=r1(i.x+dx);i.y=r1(i.y+dy)}});render();return}
+  const it=find(drag.id);
   if(it.t==='legenda'){t.legenda.x=r1(t.legenda.x+dx);t.legenda.y=r1(t.legenda.y+dy)}
   else if(it.t==='forma'){if(drag.v==null)it.pts=it.pts.map(([x,y])=>[r1(x+dx),r1(y+dy)]);else it.pts[drag.v]=[r1(p[0]),r1(p[1])]}
   else{it.x=r1(it.x+dx);it.y=r1(it.y+dy)}
@@ -358,14 +466,14 @@ function props(){
     <div class="row">${campo('Número / texto','rotulo',it.rotulo)}${campo('Cor','cor',it.cor,'color')}</div>
     ${campo('Tamanho do número','fs',it.fs,'range','min="14" max="90"')}
     ${campo('Giro do número','lrot',it.lrot||0,'range','min="-180" max="180" step="5"')}
-    <div class="btns"><button data-act="g-15">↺ Girar forma</button><button data-act="g15">↻ Girar forma</button></div>
+    <div class="btns"><button data-act="g-15">${ICCW}Girar −15°</button><button data-act="g15">${ICW}Girar +15°</button></div>
     <p class="small">Arraste os pontos brancos para mudar o formato. Duplo clique na borda cria um ponto; duplo clique num ponto apaga.</p>`;
   }else if(it.t==='rua'){
     h=`<h2>Nome de rua</h2>${campo('Texto','texto',it.texto)}
     ${campo('Tamanho','fs',it.fs,'range','min="10" max="36"')}
     ${campo('Giro','rot',it.rot,'range','min="-180" max="180"')}`;
   }else{
-    h=`<h2>Referência</h2><label>Tipo <select id="p-tipo" data-prop="tipo">${st.tipos.map(tp=>`<option value="${tp.id}" ${tp.id===it.tipo?'selected':''}>${esc(tp.nome)}</option>`).join('')}</select></label>`;
+    h=`<h2>Referência</h2><label>Tipo <select id="p-tipo" data-prop="tipo">${meus().map(tp=>`<option value="${tp.id}" ${tp.id===it.tipo?'selected':''}>${esc(tp.nome)}</option>`).join('')}</select></label>`;
   }
   h+=`<div class="btns"><button data-act="dup">Duplicar</button><button data-act="del" class="danger">Excluir</button></div>`;
   box.innerHTML=h;
@@ -385,25 +493,37 @@ function syncPanel(){
   const t=cur();
   $('#sel-terr').innerHTML=emOrdem().map(x=>`<option value="${x.id}" ${x.id===t.id?'selected':''}>${esc(nomeTerr(x))}</option>`).join('');
   $('#f-loc').value=t.localidade;$('#f-num').value=t.numero;$('#f-fundo').value=t.fundo;$('#f-texto').value=t.corTexto;$('#f-quadra').value=t.corQuadra;
-  $('#sel-tipo').innerHTML=st.tipos.map(tp=>`<option value="${tp.id}">${esc(tp.nome)}</option>`).join('');
+  $('#sel-tipo').innerHTML=meus().map(tp=>`<option value="${tp.id}">${esc(tp.nome)}</option>`).join('');
   $('#b-del').disabled=st.terr.length<2;
   tipos();props();
 }
 const campos={'f-loc':'localidade','f-num':'numero','f-fundo':'fundo','f-texto':'corTexto','f-quadra':'corQuadra'};
 for(const[id,k]of Object.entries(campos)){const el=$('#'+id);el.addEventListener('focus',snap);
   el.addEventListener('input',()=>{cur()[k]=el.value;render();save();if(k==='localidade'||k==='numero'){const o=$('#sel-terr').selectedOptions[0];if(o)o.textContent=nomeTerr(cur())}})}
+// tamanho do mapa: escala a partir do estado de quando o slider foi pego; ao soltar, volta a 100%
+// ponytail: o tamanho dos nomes de rua não muda (só a posição); números das quadras escalam junto
+let base=null;
+$("#f-escala").addEventListener("input",e=>{const t=cur(),k=e.target.value/100;
+  if(!base){snap();const ps=t.itens.flatMap(i=>i.pts||[[i.x,i.y]]);if(!ps.length)return;
+    const xs=ps.map(p=>p[0]),ys=ps.map(p=>p[1]);
+    base={c:[(Math.min(...xs)+Math.max(...xs))/2,(Math.min(...ys)+Math.max(...ys))/2],itens:JSON.parse(JSON.stringify(t.itens))}}
+  const[cx,cy]=base.c,E=([x,y])=>[r1(cx+(x-cx)*k),r1(cy+(y-cy)*k)];
+  t.itens=base.itens.map(i=>{const n={...i};if(i.pts){n.pts=i.pts.map(E);n.fs=r1(i.fs*k)}else[n.x,n.y]=E([i.x,i.y]);return n});
+  $("#escala-v").textContent=e.target.value+"%";render()});
+$("#f-escala").addEventListener("change",e=>{if(base)save();base=null;e.target.value=100;$("#escala-v").textContent="100%"});
 $('#b-aplicar').onclick=()=>{snap();const t=cur();t.itens.forEach(i=>{if(i.t==='forma'&&!i.area)i.cor=t.corQuadra});render();save()};
 function trocar(id){st.atual=id;sel=null;placing=null;cancelarDesenho();setHint();syncPanel();render();desenharMapa(true);save()}
 $('#sel-terr').onchange=e=>trocar(e.target.value);
 $('#b-novo').onclick=()=>{snap();const n=st.terr.reduce((m,x)=>Math.max(m,parseInt(x.numero)||0),0)+1,c=cur();
   const t={id:uid(),localidade:'',numero:String(n),fundo:c.fundo,corTexto:c.corTexto,corQuadra:c.corQuadra,legenda:{x:48,y:132},mapa:{quadras:[]},itens:[]};
   st.terr.push(t);trocar(t.id);mostrarAba('mapa')};
-$('#b-dup').onclick=()=>{snap();const c=JSON.parse(JSON.stringify(cur()));c.id=uid();c.itens.forEach(i=>i.id=uid());c.numero=c.numero+' (cópia)';st.terr.push(c);trocar(c.id)};
+$('#b-dup').onclick=()=>{snap();const c=JSON.parse(JSON.stringify(cur()));c.id=uid();c.itens.forEach(i=>i.id=uid());c.numero=c.numero+' (cópia)';
+  st.tipos.filter(tp=>tp.terr===st.atual).forEach(tp=>{const n={...tp,id:uid(),terr:c.id};st.tipos.push(n);c.itens.forEach(i=>{if(i.t==="ref"&&i.tipo===tp.id)i.tipo=n.id})});st.terr.push(c);trocar(c.id)};
 function armar(btn,label,acao){
   if(!btn.classList.contains('armed')){const orig=btn.textContent;btn.dataset.orig=orig;btn.classList.add('armed');btn.textContent=label;
     clearTimeout(btn._t);btn._t=setTimeout(()=>{btn.classList.remove('armed');btn.textContent=orig},3500);return}
   clearTimeout(btn._t);btn.classList.remove('armed');btn.textContent=btn.dataset.orig;acao()}
-$('#b-del').onclick=e=>armar(e.currentTarget,'Confirmar exclusão',()=>{snap();st.terr=st.terr.filter(x=>x.id!==st.atual);trocar(st.terr[0].id)});
+$('#b-del').onclick=e=>armar(e.currentTarget,'Confirmar exclusão',()=>{snap();st.terr=st.terr.filter(x=>x.id!==st.atual);st.tipos=st.tipos.filter(tp=>tp.terr!==st.atual);trocar(st.terr[0].id)});
 
 /* ---------- adicionar ---------- */
 document.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>{
@@ -419,18 +539,18 @@ $('#b-ref').onclick=()=>{placing=placing?null:$('#sel-tipo').value||null;setHint
 
 /* ---------- tipos de referência ---------- */
 function tipos(){
-  $('#tipos').innerHTML=st.tipos.map(tp=>`<div class="tipo" data-t="${tp.id}">
+  $('#tipos').innerHTML=meus().map(tp=>`<div class="tipo" data-t="${tp.id}">
     <input type="color" data-k="cor" value="${tp.cor}" aria-label="Cor">
     <input type="text" id="tn-${tp.id}" data-k="nome" value="${esc(tp.nome)}" aria-label="Nome">
     <select data-k="icone" aria-label="Ícone">${ICONES.map(([v,n])=>`<option value="${v}" ${v===tp.icone?'selected':''}>${n}</option>`).join('')}</select>
-    <button data-rm="${tp.id}" class="danger" aria-label="Remover tipo">×</button></div>`).join('')||'<p class="small">Nenhum tipo ainda.</p>';
+    <button data-rm="${tp.id}" class="danger" aria-label="Remover tipo">${IX}</button></div>`).join('')||'<p class="small">Nenhum tipo ainda.</p>';
 }
 $('#tipos').addEventListener('focusin',e=>{if(e.target.dataset.k)snap()});
 $('#tipos').addEventListener('input',e=>{const k=e.target.dataset.k;if(!k)return;const tp=st.tipos.find(x=>x.id===e.target.closest('.tipo').dataset.t);tp[k]=e.target.value;
-  render();save();if(k==='nome')$('#sel-tipo').innerHTML=st.tipos.map(x=>`<option value="${x.id}">${esc(x.nome)}</option>`).join('')});
+  render();save();if(k==='nome')$('#sel-tipo').innerHTML=meus().map(x=>`<option value="${x.id}">${esc(x.nome)}</option>`).join('')});
 $('#tipos').addEventListener('click',e=>{const id=e.target.dataset.rm;if(!id)return;snap();st.tipos=st.tipos.filter(x=>x.id!==id);
   st.terr.forEach(t=>t.itens=t.itens.filter(i=>!(i.t==='ref'&&i.tipo===id)));sel=null;syncPanel();render();save()});
-$('#b-tipo').onclick=()=>{snap();const tp={id:uid(),nome:'Nova referência',cor:'#c0392b',icone:'casa'};st.tipos.push(tp);syncPanel();render();save();const i=$('#tn-'+tp.id);if(i){i.focus();i.select()}};
+$('#b-tipo').onclick=()=>{snap();const tp={id:uid(),nome:'Nova referência',cor:'#c0392b',icone:'casa',terr:st.atual};st.tipos.push(tp);syncPanel();render();save();const i=$('#tn-'+tp.id);if(i){i.focus();i.select()}};
 
 /* ---------- abas ---------- */
 function mostrarAba(a){
@@ -467,8 +587,8 @@ function desenharMapa(enquadrar){
   ma().forEach(a=>L.polygon(a,{color:'#1f9446',weight:2,fillColor:'#1f9446',fillOpacity:.45}).addTo(camada));
   mq().forEach((q,i)=>L.polygon(q,{color:'#1f6f9a',weight:2,fillColor:'#cfe6f3',fillOpacity:.55})
     .bindTooltip(String(i+1),{permanent:true,direction:'center',className:'qlabel'}).addTo(camada));
-  $('#qlist').innerHTML=[...mq().map((q,i)=>`<span>Quadra ${i+1}<button data-rmq="${i}" aria-label="Apagar quadra ${i+1}">×</button></span>`),
-    ...ma().map((a,i)=>`<span>Área verde ${i+1}<button data-rma="${i}" aria-label="Apagar área verde ${i+1}">×</button></span>`)].join('')||'<p class="small">Nenhuma quadra desenhada neste território.</p>';
+  $('#qlist').innerHTML=[...mq().map((q,i)=>`<span>Quadra ${i+1}<button data-rmq="${i}" aria-label="Apagar quadra ${i+1}">${IX}</button></span>`),
+    ...ma().map((a,i)=>`<span>Área verde ${i+1}<button data-rma="${i}" aria-label="Apagar área verde ${i+1}">${IX}</button></span>`)].join('')||'<p class="small">Nenhuma quadra desenhada neste território.</p>';
   const tudo=[...mq(),...ma()].flat(),g=cur().mapa.giro||0;$('#r-giro').value=g;$('#o-giro').value=g; // giro é por território
 
   if(enquadrar){const v=cur().mapa?.vista;if(tudo.length)mapa.fitBounds(L.latLngBounds(tudo),{padding:[40,40]});else if(v)mapa.setView(v.c,v.z)}
@@ -628,13 +748,22 @@ $('#b-backup').onclick=()=>baixar(new Blob([JSON.stringify(st,null,1)],{type:'ap
 $('#b-restore').onclick=()=>$('#f-restore').click();
 $('#f-restore').onchange=async e=>{
   const f=e.target.files[0];e.target.value='';if(!f)return;
-  try{const s=JSON.parse(await f.text());if(!valido(s))throw 0;snap();st=s;trocar(st.atual&&st.terr.some(t=>t.id===st.atual)?st.atual:st.terr[0].id);$('#status').textContent=`backup aberto: ${st.terr.length} territórios`}
+  try{const s=JSON.parse(await f.text());if(!valido(s))throw 0;snap();st=migrar(s);trocar(st.atual&&st.terr.some(t=>t.id===st.atual)?st.atual:st.terr[0].id);$('#status').textContent=`backup aberto: ${st.terr.length} territórios`}
   catch(err){$('#status').textContent='esse arquivo não é um backup válido'}
 };
 
 $('#b-undo').onclick=undo;$('#b-undo').disabled=true;
 syncPanel();render();
 document.fonts?.ready.then(render);
+</script>
+<script>
+// v2: o menu "⋯" fecha ao escolher uma ação (Excluir fica aberto para a confirmação em dois cliques)
+$('#menu').addEventListener('click',e=>{const b=e.target.closest('button');if(b&&b.id!=='b-del')$('#menu').hidePopover()});
+// bolinha do status fica vermelha quando o salvamento falha (ponytail: lê o texto que save() escreve)
+new MutationObserver(()=>$('#status').classList.toggle('erro',$('#status').textContent.startsWith('não foi'))).observe($('#status'),{childList:true,characterData:true,subtree:true});
+// assinatura: número do território na barra superior, atualizado a cada render
+const brandNum=()=>{const n=cur().numero;$('#brand-num').innerHTML=n?'N.º <b>'+esc(n)+'</b>':''};
+const _render=render;render=function(){_render.apply(this,arguments);brandNum()};brandNum();
 </script>
 </body>
 </html>
