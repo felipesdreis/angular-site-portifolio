@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Ride Planner">
+  <!-- Ride Planner: uma rota contínua que desenha a letra R, do ponto de início ao ponto de chegada -->
+  <rect width="64" height="64" rx="14" fill="#141415"/>
+  <path d="M20 50 V14 H33 C41 14 45 19 45 24.5 C45 30 41 35 33 35 H29 L45 50"
+        fill="none" stroke="#1EA767" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="20" cy="50" r="5" fill="#1EA767"/>
+  <circle cx="45" cy="50" r="4.5" fill="#141415" stroke="#ededed" stroke-width="3"/>
+</svg>
