@@ -84,11 +84,12 @@ header{position:sticky;top:0;z-index:1000;background:var(--glass);backdrop-filte
 .hint{font-size:13px;color:var(--muted);background:var(--surface);border-radius:8px;padding:8px 12px;box-shadow:var(--shadow)}
 .desk{background:var(--desk);border-radius:16px;padding:clamp(12px,2.5vw,32px)}
 /* ícones: um traço só, na cor do texto */
-.i{width:16px;height:16px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.i{pointer-events:none;width:16px;height:16px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .paper{background:#fff;border-radius:4px;overflow:hidden;box-shadow:0 1px 1px rgba(0,0,0,.06),0 6px 18px rgba(0,0,0,.08),0 24px 48px -12px rgba(0,0,0,.16)}
 #card{display:block;width:100%;height:auto;touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab}
 #card:active{cursor:grabbing}
 #card [data-id]{cursor:move}
+.c-num{cursor:move}
 #map{height:min(74vh,760px);min-height:400px;border-radius:12px;overflow:hidden;box-shadow:var(--shadow)}
 
 /* ---------- inspetor (grupos arredondados) ---------- */
@@ -355,6 +356,15 @@ function centro(pts){let a=0,cx=0,cy=0;for(let i=0;i<pts.length;i++){const[x0,y0
   if(Math.abs(a)<1e-6)return[pts.reduce((s,p)=>s+p[0],0)/pts.length,pts.reduce((s,p)=>s+p[1],0)/pts.length];a*=3;return[cx/a,cy/a]}
 function areaPol(pts){let a=0;for(let i=0;i<pts.length;i++){const[x0,y0]=pts[i],[x1,y1]=pts[(i+1)%pts.length];a+=x0*y1-x1*y0}return Math.abs(a/2)}
 function distSeg(p,a,b){const dx=b[0]-a[0],dy=b[1]-a[1],L=dx*dx+dy*dy;let t=L?((p[0]-a[0])*dx+(p[1]-a[1])*dy)/L:0;t=Math.max(0,Math.min(1,t));return Math.hypot(p[0]-a[0]-t*dx,p[1]-a[1]-t*dy)}
+function dentro(p,pts){let d=false;for(let i=0,j=pts.length-1;i<pts.length;j=i++){const[xi,yi]=pts[i],[xj,yj]=pts[j];if((yi>p[1])!==(yj>p[1])&&p[0]<(xj-xi)*(p[1]-yi)/(yj-yi)+xi)d=!d}return d}
+// centróide, a não ser que caia fora ou rente à borda (quadra em L): aí o ponto mais longe das bordas
+// ponytail: busca em grade 24×24, troque por polylabel se precisar de precisão
+function pontoNum(pts){
+  const folga=p=>dentro(p,pts)?Math.min(...pts.map((a,i)=>distSeg(p,a,pts[(i+1)%pts.length]))):-1;
+  const xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]),x0=Math.min(...xs),y0=Math.min(...ys),w=Math.max(...xs)-x0,h=Math.max(...ys)-y0;
+  let best=null,bd=-1;for(let i=.5;i<24;i++)for(let j=.5;j<24;j++){const p=[x0+w*i/24,y0+h*j/24],d=folga(p);if(d>bd){bd=d;best=p}}
+  const c=centro(pts);return folga(c)>=bd*.8||!best?c:best}
+function posNum(it){const[x,y]=pontoNum(it.pts);return[r1(x+(it.lx||0)),r1(y+(it.ly||0))]}
 function girar(it,g){const[cx,cy]=centro(it.pts),r=g*Math.PI/180,c=Math.cos(r),s=Math.sin(r);it.pts=it.pts.map(([x,y])=>[r1(cx+(x-cx)*c-(y-cy)*s),r1(cy+(x-cx)*s+(y-cy)*c)])}
 function pt(e){const p=svg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;const q=p.matrixTransform(svg.getScreenCTM().inverse());return[q.x,q.y]}
 
@@ -380,7 +390,7 @@ function cardSVG(t,s){
   h+=`<text x="720" y="78" class="c-lbl" fill="${tc}">Terr. N.º</text><line x1="800" y1="80" x2="956" y2="80" stroke="${tc}" stroke-width="1.6" stroke-dasharray="1.5 4" stroke-linecap="round"/><text x="878" y="74" text-anchor="middle" class="c-val" fill="${tc}">${esc(t.numero)}</text>`;
   for(const it of t.itens.filter(i=>i.t==='forma')){
     h+=`<polygon data-id="${it.id}" points="${it.pts.map(p=>p.join(',')).join(' ')}" fill="${it.cor}" stroke="${it.area?'none':'rgba(0,0,0,.28)'}" stroke-width="1.2" stroke-linejoin="round"/>`;
-    if(it.rotulo){const[cx,cy]=centro(it.pts);h+=`<text x="${r1(cx)}" y="${r1(cy)}" transform="rotate(${it.lrot||0} ${r1(cx)} ${r1(cy)})" text-anchor="middle" dominant-baseline="central" font-size="${it.fs}" class="c-num" fill="${tc}" pointer-events="none">${esc(it.rotulo)}</text>`}
+    if(it.rotulo){const[cx,cy]=posNum(it);h+=`<text data-id="${it.id}" data-lbl="1" x="${r1(cx)}" y="${r1(cy)}" transform="rotate(${it.lrot||0} ${r1(cx)} ${r1(cy)})" text-anchor="middle" dominant-baseline="central" font-size="${it.fs}" class="c-num" fill="${tc}">${esc(it.rotulo)}</text>`}
   }
   for(const it of t.itens.filter(i=>i.t==='rua'))
     h+=`<text data-id="${it.id}" x="${it.x}" y="${it.y}" transform="rotate(${it.rot} ${it.x} ${it.y})" text-anchor="middle" dominant-baseline="central" font-size="${it.fs}" class="c-rua" fill="${tc}">${esc(it.texto)}</text>`;
@@ -411,7 +421,7 @@ svg.addEventListener('pointerdown',e=>{
   if(placing){snap();const it={id:uid(),t:'ref',tipo:placing,x:r1(p[0]),y:r1(p[1])};t.itens.push(it);placing=null;sel=it.id;setHint();render();props();save();return}
   const el=e.target.closest('[data-id]');
   if(!el){sel=null;drag={id:"*",last:p,moved:false};svg.setPointerCapture(e.pointerId);render();props();return} // fundo: arrasta o mapa todo
-  sel=el.dataset.id;drag={id:sel,v:el.dataset.v!=null?+el.dataset.v:null,last:p,moved:false};
+  sel=el.dataset.id;drag={id:sel,v:el.dataset.v!=null?+el.dataset.v:null,lbl:el.dataset.lbl!=null,last:p,moved:false};
   svg.setPointerCapture(e.pointerId);render();props();
 });
 svg.addEventListener('pointermove',e=>{
@@ -421,6 +431,7 @@ svg.addEventListener('pointermove',e=>{
   if(drag.id==="*"){t.itens.forEach(i=>{if(i.pts)i.pts=i.pts.map(([x,y])=>[r1(x+dx),r1(y+dy)]);else{i.x=r1(i.x+dx);i.y=r1(i.y+dy)}});render();return}
   const it=find(drag.id);
   if(it.t==='legenda'){t.legenda.x=r1(t.legenda.x+dx);t.legenda.y=r1(t.legenda.y+dy)}
+  else if(it.t==='forma'&&drag.lbl){it.lx=r1((it.lx||0)+dx);it.ly=r1((it.ly||0)+dy)}
   else if(it.t==='forma'){if(drag.v==null)it.pts=it.pts.map(([x,y])=>[r1(x+dx),r1(y+dy)]);else it.pts[drag.v]=[r1(p[0]),r1(p[1])]}
   else{it.x=r1(it.x+dx);it.y=r1(it.y+dy)}
   render();
@@ -467,7 +478,8 @@ function props(){
     ${campo('Tamanho do número','fs',it.fs,'range','min="14" max="90"')}
     ${campo('Giro do número','lrot',it.lrot||0,'range','min="-180" max="180" step="5"')}
     <div class="btns"><button data-act="g-15">${ICCW}Girar −15°</button><button data-act="g15">${ICW}Girar +15°</button></div>
-    <p class="small">Arraste os pontos brancos para mudar o formato. Duplo clique na borda cria um ponto; duplo clique num ponto apaga.</p>`;
+    ${it.lx||it.ly?'<button data-act="lcentro">Voltar número ao lugar automático</button>':''}
+    <p class="small">Arraste o número para reposicioná-lo. Arraste os pontos brancos para mudar o formato. Duplo clique na borda cria um ponto; duplo clique num ponto apaga.</p>`;
   }else if(it.t==='rua'){
     h=`<h2>Nome de rua</h2>${campo('Texto','texto',it.texto)}
     ${campo('Tamanho','fs',it.fs,'range','min="10" max="36"')}
@@ -482,7 +494,7 @@ $('#props').addEventListener('focusin',e=>{if(e.target.dataset.prop)snap()});
 $('#props').addEventListener('input',e=>{const k=e.target.dataset.prop,it=find(sel);if(!k||!it)return;
   it[k]=e.target.type==='range'?+e.target.value:e.target.value;render();save()});
 $('#props').addEventListener('click',e=>{const a=e.target.dataset.act;if(!a)return;
-  if(a==='del')remover();else if(a==='dup')duplicar();else{snap();girar(find(sel),a==='g15'?15:-15);render();save()}});
+  if(a==='del')remover();else if(a==='dup')duplicar();else if(a==='lcentro'){snap();const it=find(sel);delete it.lx;delete it.ly;render();props();save()}else{snap();girar(find(sel),a==='g15'?15:-15);render();save()}});
 
 /* ---------- território e cartão ---------- */
 function proximoNum(){const ns=cur().itens.filter(i=>i.t==='forma'&&!i.area).map(i=>parseInt(i.rotulo)).filter(n=>!isNaN(n));return String(ns.length?Math.max(...ns)+1:1)}
@@ -508,7 +520,7 @@ $("#f-escala").addEventListener("input",e=>{const t=cur(),k=e.target.value/100;
     const xs=ps.map(p=>p[0]),ys=ps.map(p=>p[1]);
     base={c:[(Math.min(...xs)+Math.max(...xs))/2,(Math.min(...ys)+Math.max(...ys))/2],itens:JSON.parse(JSON.stringify(t.itens))}}
   const[cx,cy]=base.c,E=([x,y])=>[r1(cx+(x-cx)*k),r1(cy+(y-cy)*k)];
-  t.itens=base.itens.map(i=>{const n={...i};if(i.pts){n.pts=i.pts.map(E);n.fs=r1(i.fs*k)}else[n.x,n.y]=E([i.x,i.y]);return n});
+  t.itens=base.itens.map(i=>{const n={...i};if(i.pts){n.pts=i.pts.map(E);n.fs=r1(i.fs*k);if(i.lx||i.ly){n.lx=r1((i.lx||0)*k);n.ly=r1((i.ly||0)*k)}}else[n.x,n.y]=E([i.x,i.y]);return n});
   $("#escala-v").textContent=e.target.value+"%";render()});
 $("#f-escala").addEventListener("change",e=>{if(base)save();base=null;e.target.value=100;$("#escala-v").textContent="100%"});
 $('#b-aplicar').onclick=()=>{snap();const t=cur();t.itens.forEach(i=>{if(i.t==='forma'&&!i.area)i.cor=t.corQuadra});render();save()};
