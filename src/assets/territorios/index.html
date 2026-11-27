@@ -59,7 +59,7 @@ header{position:sticky;top:0;z-index:1000;background:var(--glass);backdrop-filte
 
 /* menu "Mais" (popover nativo, ancorado no botão) */
 #b-mais{anchor-name:--mais;width:32px;padding:0}
-#menu{position-anchor:--mais;inset:auto;top:anchor(bottom);right:anchor(right);margin:8px 0 0;min-width:220px;padding:4px;
+#menu{position-anchor:--mais;inset:auto;top:anchor(bottom);right:anchor(right);position-try-fallbacks:flip-inline;margin:8px 0 0;min-width:220px;padding:4px;
   border:1px solid var(--line);border-radius:12px;background:var(--glass);backdrop-filter:blur(30px) saturate(180%);-webkit-backdrop-filter:blur(30px) saturate(180%);
   box-shadow:0 10px 40px rgba(0,0,0,.18),0 2px 8px rgba(0,0,0,.08);color:var(--fg);
   transform-origin:top right;transition:opacity .18s var(--ease),transform .25s var(--ease),display .25s allow-discrete,overlay .25s allow-discrete}
@@ -144,10 +144,37 @@ button:disabled{opacity:.4;cursor:default}
 .leaflet-container{font-family:var(--ui)}
 .qlabel{background:transparent;border:0;box-shadow:none;font:700 15px var(--ui);color:#0c3550;text-shadow:0 0 3px #fff,0 0 3px #fff}
 .qlabel:before{display:none}
+.vtx{background:#fff;border:2px solid #d9480f;border-radius:50%;cursor:move}
+.vtx.on{background:#d9480f}
+.vtx.mid{border-style:dashed;opacity:.75}
+.qlist span[data-ed]{cursor:pointer}
+.qlist span.on{background:var(--accent);color:var(--accent-fg)}.qlist span.on button{color:inherit}
 
 /* SVG do cartão (seleção) */
 .sel-box{fill:none;stroke:#1f6f9a;stroke-width:1.5;stroke-dasharray:5 4;pointer-events:none}
 .handle{fill:#fff;stroke:#1f6f9a;stroke-width:2.5;cursor:grab}
+.handle.on{fill:#1f6f9a}
+
+/* ---------- celular ---------- */
+@media (max-width:600px){
+  header{position:static} /* 4 linhas fixas comeriam 1/4 da tela */
+  .hdr{padding:8px 12px}
+  .brand{flex:1}
+  .tabs{order:1;flex:1 1 100%}
+  #status:not(.erro){font-size:0;gap:0} /* só a bolinha; em erro o texto aparece */
+  .terr{order:2;flex:1 1 100%}.terr select{flex:1;min-width:0}
+  #b-print{order:3;flex:1}#b-mais{order:3}
+  .app{padding:12px 12px 32px}
+  .desk{padding:4px;border-radius:8px}
+}
+@media (max-width:960px){#map{height:60svh;min-height:300px}} /* sobra tela para rolar a página fora do mapa */
+/* toque: alvos de 40px e fonte de 16px nos campos (abaixo disso o iOS dá zoom ao focar) */
+@media (pointer:coarse){
+  button,input[type=text],input[type=search],select,input[type=color]{height:40px}
+  input[type=text],input[type=search],select{font-size:16px}
+  .tabs button{height:36px}
+  .qlist button{height:32px;width:32px}
+}
 
 /* ---------- acessibilidade ---------- */
 @media (prefers-reduced-motion:reduce){
@@ -206,7 +233,7 @@ button:disabled{opacity:.4;cursor:default}
   <!-- ===== ABA MAPA ===== -->
   <div class="main" id="tab-mapa" hidden>
     <div class="stage">
-      <div class="toolbar"><div class="hint" id="map-hint">Procure o bairro, clique em "Desenhar quadra" e clique nos cantos da quadra no mapa.</div></div>
+      <div class="toolbar"><button id="b-concluir" class="primary" hidden>Concluir</button><button id="b-desfazer-ponto" hidden>Apagar último ponto</button><button id="b-m-ok" class="primary" hidden>Concluir edição</button><button id="b-m-apagar" hidden>Apagar ponto</button><button id="b-m-desfazer" hidden>Desfazer</button><div class="hint" id="map-hint">Procure o bairro, clique em "Desenhar quadra" e clique nos cantos da quadra no mapa.</div></div>
       <div id="map"></div>
     </div>
     <aside class="panel">
@@ -222,8 +249,6 @@ button:disabled{opacity:.4;cursor:default}
         <div class="btns">
           <button id="b-desenhar">Desenhar quadra</button>
           <button id="b-desenhar-area">Desenhar área verde</button>
-          <button id="b-concluir" hidden>Concluir</button>
-          <button id="b-desfazer-ponto" hidden>Apagar último ponto</button>
         </div>
         <p class="small">Clique em cada canto da quadra ou da área verde. Para fechar: clique no primeiro ponto, dê duplo clique ou aperte "Concluir". A numeração das quadras segue a ordem do desenho.</p>
         <div class="qlist" id="qlist"></div>
@@ -344,7 +369,8 @@ function migrar(s){s.tipos.forEach(tp=>{if("terr" in tp)return;const us=s.terr.f
 function load(){try{const s=JSON.parse(localStorage.getItem(KEY));return valido(s)?migrar(s):null}catch(e){return null}}
 const meus=()=>st.tipos.filter(tp=>!tp.terr||tp.terr===st.atual);
 let st=load()||seed();
-let sel=null, drag=null, placing=null, hist=[];
+let sel=null, drag=null, placing=null, hist=[], selV=null; // selV = ponto (vértice) tocado por último na quadra selecionada
+const TOQUE=matchMedia('(pointer:coarse)').matches; // celular/tablet: sem teclado nem duplo clique confiável
 function save(){try{localStorage.setItem(KEY,JSON.stringify(st));$('#status').textContent='salvo neste navegador'}catch(e){$('#status').textContent='não foi possível salvar — faça um backup'}}
 function snap(){hist.push(JSON.stringify(st));if(hist.length>60)hist.shift();$('#b-undo').disabled=false}
 function undo(){if(!hist.length)return;st=JSON.parse(hist.pop());sel=null;$('#b-undo').disabled=!hist.length;syncPanel();render();desenharMapa();save()}
@@ -403,7 +429,7 @@ function cardSVG(t,s){
     h+=`</g>`}
   if(s&&s.t==='forma'){
     h+=`<polygon points="${s.pts.map(p=>p.join(',')).join(' ')}" class="sel-box"/>`;
-    s.pts.forEach((p,i)=>{h+=`<circle data-id="${s.id}" data-v="${i}" cx="${p[0]}" cy="${p[1]}" r="7" class="handle"/>`});
+    s.pts.forEach((p,i)=>{h+=`<circle data-id="${s.id}" data-v="${i}" cx="${p[0]}" cy="${p[1]}" r="${TOQUE?16:7}" class="handle${i===selV?' on':''}"/>`});
   }
   return h;
 }
@@ -420,8 +446,8 @@ svg.addEventListener('pointerdown',e=>{
   const p=pt(e),t=cur();
   if(placing){snap();const it={id:uid(),t:'ref',tipo:placing,x:r1(p[0]),y:r1(p[1])};t.itens.push(it);placing=null;sel=it.id;setHint();render();props();save();return}
   const el=e.target.closest('[data-id]');
-  if(!el){sel=null;drag={id:"*",last:p,moved:false};svg.setPointerCapture(e.pointerId);render();props();return} // fundo: arrasta o mapa todo
-  sel=el.dataset.id;drag={id:sel,v:el.dataset.v!=null?+el.dataset.v:null,lbl:el.dataset.lbl!=null,last:p,moved:false};
+  if(!el){sel=null;selV=null;drag={id:"*",last:p,moved:false};svg.setPointerCapture(e.pointerId);render();props();return} // fundo: arrasta o mapa todo
+  sel=el.dataset.id;selV=el.dataset.v!=null?+el.dataset.v:null;drag={id:sel,v:el.dataset.v!=null?+el.dataset.v:null,lbl:el.dataset.lbl!=null,last:p,moved:false};
   svg.setPointerCapture(e.pointerId);render();props();
 });
 svg.addEventListener('pointermove',e=>{
@@ -442,11 +468,13 @@ svg.addEventListener('dblclick',e=>{
   const el=e.target.closest('[data-id]');if(!el)return;const it=find(el.dataset.id);if(it?.t!=='forma')return;
   if(el.dataset.v!=null){if(it.pts.length<=3)return;snap();it.pts.splice(+el.dataset.v,1)}
   else{const p=pt(e);let best=0,bd=1e9;it.pts.forEach((a,i)=>{const d=distSeg(p,a,it.pts[(i+1)%it.pts.length]);if(d<bd){bd=d;best=i}});snap();it.pts.splice(best+1,0,[r1(p[0]),r1(p[1])])}
-  sel=it.id;render();save();
+  sel=it.id;selV=null;render();props();save();
 });
 document.addEventListener('keydown',e=>{
   const typing=e.target.matches('input,select,textarea');
-  if(!$('#tab-mapa').hidden){if(desenho&&e.key==='Enter')concluir();if(desenho&&e.key==='Escape')cancelarDesenho();return}
+  if(!$('#tab-mapa').hidden){if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'&&!typing){e.preventDefault();undo();return}
+    if(editQ&&!typing){if(e.key==='Delete'||e.key==='Backspace'){e.preventDefault();apagarPontoMapa()}if(e.key==='Escape'||e.key==='Enter')fimEdicao();return}
+    if(desenho&&e.key==='Enter')concluir();if(desenho&&e.key==='Escape')cancelarDesenho();return}
   if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'&&!typing){e.preventDefault();undo();return}
   if(e.key==='Escape'&&placing){placing=null;setHint();return}
   if(!sel||typing)return;
@@ -459,6 +487,12 @@ document.addEventListener('keydown',e=>{
 });
 
 /* ---------- painel: item selecionado ---------- */
+function ponto(add){ // botões para quem não tem duplo clique (celular)
+  const it=find(sel),P=it.pts,n=P.length;if(selV>=n)selV=null;if(!add&&(selV==null||n<=3))return;snap();
+  if(add){const i=selV??P.reduce((m,a,i)=>{const b=P[(i+1)%n],d=Math.hypot(a[0]-b[0],a[1]-b[1]);return d>m[1]?[i,d]:m},[0,-1])[0]; // sem ponto escolhido: lado mais longo
+    const a=P[i],b=P[(i+1)%n];P.splice(i+1,0,[r1((a[0]+b[0])/2),r1((a[1]+b[1])/2)]);selV=i+1}
+  else{P.splice(selV,1);selV=null}
+  render();props();save()}
 function remover(){snap();const t=cur();t.itens=t.itens.filter(i=>i.id!==sel);sel=null;render();props();save()}
 function duplicar(){const it=find(sel);if(!it||it.t==='legenda')return;snap();const c=JSON.parse(JSON.stringify(it));c.id=uid();
   if(c.t==='forma'){c.pts=c.pts.map(([x,y])=>[x+20,y+20]);if(c.rotulo&&!c.area)c.rotulo=proximoNum()}else{c.x+=20;c.y+=20}
@@ -469,7 +503,7 @@ function campo(lbl,prop,val,tipo='text',extra=''){
   return`<label>${lbl} <input type="text" id="p-${prop}" data-prop="${prop}" value="${esc(val)}"></label>`}
 function props(){
   const box=$('#props'),it=sel&&find(sel);
-  if(!it){box.innerHTML=`<h2>Seleção</h2><p class="small">Clique numa quadra, num nome de rua ou num ícone para editar.<br>Delete apaga · setas movem · Ctrl+Z desfaz.</p>`;return}
+  if(!it){box.innerHTML=`<h2>Seleção</h2><p class="small">Clique numa quadra, num nome de rua ou num ícone para editar.${TOQUE?'':'<br>Delete apaga · setas movem · Ctrl+Z desfaz.'}</p>`;return}
   if(it.t==='legenda'){box.innerHTML=`<h2>Legenda</h2><p class="small">A legenda mostra só os tipos usados neste cartão. Arraste para reposicionar.</p>`;return}
   let h='';
   if(it.t==='forma'){
@@ -478,8 +512,9 @@ function props(){
     ${campo('Tamanho do número','fs',it.fs,'range','min="14" max="90"')}
     ${campo('Giro do número','lrot',it.lrot||0,'range','min="-180" max="180" step="5"')}
     <div class="btns"><button data-act="g-15">${ICCW}Girar −15°</button><button data-act="g15">${ICW}Girar +15°</button></div>
+    <div class="btns"><button data-act="p+">Adicionar ponto</button><button data-act="p-" ${selV==null||it.pts.length<=3?'disabled':''}>Apagar ponto</button></div>
     ${it.lx||it.ly?'<button data-act="lcentro">Voltar número ao lugar automático</button>':''}
-    <p class="small">Arraste o número para reposicioná-lo. Arraste os pontos brancos para mudar o formato. Duplo clique na borda cria um ponto; duplo clique num ponto apaga.</p>`;
+    <p class="small">Arraste o número para reposicioná-lo. Arraste os pontos brancos para mudar o formato. Toque num ponto para escolhê-lo: "Adicionar ponto" cria um novo logo depois dele${TOQUE?'':'; duplo clique na borda também cria e num ponto apaga'}.</p>`;
   }else if(it.t==='rua'){
     h=`<h2>Nome de rua</h2>${campo('Texto','texto',it.texto)}
     ${campo('Tamanho','fs',it.fs,'range','min="10" max="36"')}
@@ -494,7 +529,7 @@ $('#props').addEventListener('focusin',e=>{if(e.target.dataset.prop)snap()});
 $('#props').addEventListener('input',e=>{const k=e.target.dataset.prop,it=find(sel);if(!k||!it)return;
   it[k]=e.target.type==='range'?+e.target.value:e.target.value;render();save()});
 $('#props').addEventListener('click',e=>{const a=e.target.dataset.act;if(!a)return;
-  if(a==='del')remover();else if(a==='dup')duplicar();else if(a==='lcentro'){snap();const it=find(sel);delete it.lx;delete it.ly;render();props();save()}else{snap();girar(find(sel),a==='g15'?15:-15);render();save()}});
+  if(a==='del')remover();else if(a==='dup')duplicar();else if(a==='p+'||a==='p-')ponto(a==='p+');else if(a==='lcentro'){snap();const it=find(sel);delete it.lx;delete it.ly;render();props();save()}else{snap();girar(find(sel),a==='g15'?15:-15);render();save()}});
 
 /* ---------- território e cartão ---------- */
 function proximoNum(){const ns=cur().itens.filter(i=>i.t==='forma'&&!i.area).map(i=>parseInt(i.rotulo)).filter(n=>!isNaN(n));return String(ns.length?Math.max(...ns)+1:1)}
@@ -524,7 +559,7 @@ $("#f-escala").addEventListener("input",e=>{const t=cur(),k=e.target.value/100;
   $("#escala-v").textContent=e.target.value+"%";render()});
 $("#f-escala").addEventListener("change",e=>{if(base)save();base=null;e.target.value=100;$("#escala-v").textContent="100%"});
 $('#b-aplicar').onclick=()=>{snap();const t=cur();t.itens.forEach(i=>{if(i.t==='forma'&&!i.area)i.cor=t.corQuadra});render();save()};
-function trocar(id){st.atual=id;sel=null;placing=null;cancelarDesenho();setHint();syncPanel();render();desenharMapa(true);save()}
+function trocar(id){st.atual=id;sel=null;editQ=null;placing=null;cancelarDesenho();setHint();syncPanel();render();desenharMapa(true);save()}
 $('#sel-terr').onchange=e=>trocar(e.target.value);
 $('#b-novo').onclick=()=>{snap();const n=st.terr.reduce((m,x)=>Math.max(m,parseInt(x.numero)||0),0)+1,c=cur();
   const t={id:uid(),localidade:'',numero:String(n),fundo:c.fundo,corTexto:c.corTexto,corQuadra:c.corQuadra,legenda:{x:48,y:132},mapa:{quadras:[]},itens:[]};
@@ -574,6 +609,9 @@ $('#tab-btn-mapa').onclick=()=>mostrarAba('mapa');$('#tab-btn-cartao').onclick=(
 
 /* ---------- MAPA (Leaflet + OpenStreetMap) ---------- */
 let mapa=null,camada=null,desenho=null,camDesenho=null,modo='quadra';
+let editQ=null; // {k:'q'|'a', i, v}: quadra/área em edição no mapa; v = ponto escolhido
+const lista=k=>k==='a'?ma():mq();
+const HINT_MAPA=`Procure o bairro, ${TOQUE?'toque':'clique'} em "Desenhar quadra" e marque os cantos no mapa. ${TOQUE?'Toque':'Clique'} numa quadra pronta para ajustar o desenho.`;
 const mq=()=>(cur().mapa??=({quadras:[]})).quadras;
 const ma=()=>{mq();return cur().mapa.areas??=[]}; // áreas verdes: campo opcional, backups antigos não têm
 function iniciarMapa(){
@@ -589,36 +627,61 @@ function iniciarMapa(){
     attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'});
   L.control.layers({'Ruas':ruas,'Satélite':sat,'OpenStreetMap':osm}).addTo(mapa);
   camada=L.layerGroup().addTo(mapa);camDesenho=L.layerGroup().addTo(mapa);
-  mapa.on('click',e=>{if(!desenho)return;desenho.push([e.latlng.lat,e.latlng.lng]);desenharRascunho()});
+  mapa.on('click',e=>{if(!desenho){fimEdicao();return}desenho.push([e.latlng.lat,e.latlng.lng]);desenharRascunho()});
   mapa.on('dblclick',()=>{if(!desenho)return;desenho.pop();concluir()});
   mapa.on('mousemove',e=>{if(desenho&&desenho.length)desenharRascunho([e.latlng.lat,e.latlng.lng])});
   mapa.on('moveend',()=>{mq();cur().mapa.vista={c:[mapa.getCenter().lat,mapa.getCenter().lng],z:mapa.getZoom()};save()});
 }
 function desenharMapa(enquadrar){
   if(!mapa)return;camada.clearLayers();
-  ma().forEach(a=>L.polygon(a,{color:'#1f9446',weight:2,fillColor:'#1f9446',fillOpacity:.45}).addTo(camada));
-  mq().forEach((q,i)=>L.polygon(q,{color:'#1f6f9a',weight:2,fillColor:'#cfe6f3',fillOpacity:.55})
-    .bindTooltip(String(i+1),{permanent:true,direction:'center',className:'qlabel'}).addTo(camada));
-  $('#qlist').innerHTML=[...mq().map((q,i)=>`<span>Quadra ${i+1}<button data-rmq="${i}" aria-label="Apagar quadra ${i+1}">${IX}</button></span>`),
-    ...ma().map((a,i)=>`<span>Área verde ${i+1}<button data-rma="${i}" aria-label="Apagar área verde ${i+1}">${IX}</button></span>`)].join('')||'<p class="small">Nenhuma quadra desenhada neste território.</p>';
+  if(editQ&&!lista(editQ.k)[editQ.i])editQ=null;
+  const pol=(P,k,i,o)=>{const ed=editQ?.k===k&&editQ.i===i,p=L.polygon(P,{...o,weight:ed?3:2,dashArray:ed?'6 4':null}).addTo(camada);
+    p.on('click',e=>{if(desenho)return;L.DomEvent.stop(e);editar(k,i)}); // desenhando: o clique segue para o mapa e vira ponto
+    if(ed)alcas(p,P);return p};
+  ma().forEach((a,i)=>pol(a,'a',i,{color:'#1f9446',fillColor:'#1f9446',fillOpacity:.45}));
+  mq().forEach((q,i)=>pol(q,'q',i,{color:'#1f6f9a',fillColor:'#cfe6f3',fillOpacity:.55}).bindTooltip(String(i+1),{permanent:true,direction:'center',className:'qlabel'}));
+  uiEdicao();
+  $('#qlist').innerHTML=[...mq().map((q,i)=>`<span data-ed="q:${i}"${editQ?.k==='q'&&editQ.i===i?' class="on"':''}>Quadra ${i+1}<button data-rmq="${i}" aria-label="Apagar quadra ${i+1}">${IX}</button></span>`),
+    ...ma().map((a,i)=>`<span data-ed="a:${i}"${editQ?.k==='a'&&editQ.i===i?' class="on"':''}>Área verde ${i+1}<button data-rma="${i}" aria-label="Apagar área verde ${i+1}">${IX}</button></span>`)].join('')||'<p class="small">Nenhuma quadra desenhada neste território.</p>';
   const tudo=[...mq(),...ma()].flat(),g=cur().mapa.giro||0;$('#r-giro').value=g;$('#o-giro').value=g; // giro é por território
 
   if(enquadrar){const v=cur().mapa?.vista;if(tudo.length)mapa.fitBounds(L.latLngBounds(tudo),{padding:[40,40]});else if(v)mapa.setView(v.c,v.z)}
 }
+/* edição de uma quadra já desenhada: cantos arrastáveis + pontos no meio dos lados para criar cantos */
+function editar(k,i){cancelarDesenho();editQ={k,i,v:null};desenharMapa()}
+function fimEdicao(){if(!editQ)return;editQ=null;desenharMapa()}
+const ll=l=>[+l.lat.toFixed(7),+l.lng.toFixed(7)];
+function alcas(p,P){
+  const t=TOQUE?22:14,ic=(c,s=t)=>L.divIcon({className:'vtx '+c,iconSize:[s,s]}),n=P.length;
+  const arrasto=(m,j,antes)=>m.on('dragstart',()=>{snap();antes?.();editQ.v=j})
+    .on('drag',e=>{P[j]=ll(e.target.getLatLng());p.setLatLngs(P)}).on('dragend',()=>{save();desenharMapa()});
+  P.forEach((q,j)=>{const m=L.marker(q,{icon:ic(j===editQ.v?'on':''),draggable:true,zIndexOffset:1000}).addTo(camada);
+    arrasto(m,j).on('click',e=>{L.DomEvent.stop(e);editQ.v=j;desenharMapa()})});
+  P.forEach((a,j)=>{const b=P[(j+1)%n],mid=ll({lat:(a[0]+b[0])/2,lng:(a[1]+b[1])/2}),m=L.marker(mid,{icon:ic('mid',Math.round(t*.75)),draggable:true}).addTo(camada);
+    arrasto(m,j+1,()=>P.splice(j+1,0,mid)).on('click',e=>{L.DomEvent.stop(e);snap();P.splice(j+1,0,mid);editQ.v=j+1;save();desenharMapa()})});
+}
+function apagarPontoMapa(){if(!editQ||editQ.v==null)return;const P=lista(editQ.k)[editQ.i];if(P.length<=3)return;snap();P.splice(editQ.v,1);editQ.v=null;save();desenharMapa()}
+function uiEdicao(){
+  const h=$('#map-hint');$('#b-m-ok').hidden=$('#b-m-apagar').hidden=$('#b-m-desfazer').hidden=!editQ;
+  if(!editQ){if(h.dataset.ed){delete h.dataset.ed;h.textContent=HINT_MAPA}return}
+  h.dataset.ed=1;$('#b-m-desfazer').disabled=!hist.length;
+  $('#b-m-apagar').disabled=editQ.v==null||lista(editQ.k)[editQ.i].length<=3;
+  h.textContent=`Ajustando ${editQ.k==='a'?'a área verde':'a quadra'} ${editQ.i+1}: arraste os cantos; puxe ${TOQUE?'ou toque':'ou clique'} nos pontos tracejados do meio dos lados para criar um canto. Para apagar um canto, ${TOQUE?'toque':'clique'} nele e em "Apagar ponto".`}
+$('#b-m-ok').onclick=fimEdicao;$('#b-m-desfazer').onclick=undo;$('#b-m-apagar').onclick=apagarPontoMapa;
 function desenharRascunho(mouse){
   camDesenho.clearLayers();if(!desenho)return;
   const pts=mouse?[...desenho,mouse]:desenho;
   if(pts.length>1)L.polyline(pts,{color:'#d9480f',weight:2,dashArray:'6 5'}).addTo(camDesenho);
-  desenho.forEach((p,i)=>{const m=L.circleMarker(p,{radius:i?5:8,color:'#d9480f',fillColor:'#fff',fillOpacity:1,weight:2}).addTo(camDesenho);
+  desenho.forEach((p,i)=>{const m=L.circleMarker(p,{radius:i?(TOQUE?7:5):(TOQUE?14:8),color:'#d9480f',fillColor:'#fff',fillOpacity:1,weight:2}).addTo(camDesenho);
     if(i===0)m.on('click',e=>{L.DomEvent.stop(e);concluir()})});
 }
 function setModoDesenho(on){
   $('#b-desenhar').hidden=on;$('#b-desenhar-area').hidden=on;$('#b-concluir').hidden=!on;$('#b-desfazer-ponto').hidden=!on;
-  $('#map').style.cursor=on?'crosshair':'';
-  $('#map-hint').textContent=on?`Clique nos cantos da ${modo==='area'?'área verde':'quadra'}. Feche clicando no primeiro ponto, com duplo clique ou Enter. Esc cancela.`:'Procure o bairro, clique em "Desenhar quadra" e clique nos cantos da quadra no mapa.';
+  $('#map').style.cursor=on?'crosshair':'';if(on&&innerWidth<=960)$('#tab-mapa .stage').scrollIntoView({behavior:'smooth',block:'start'}); // no celular o botão fica abaixo do mapa
+  $('#map-hint').textContent=on?`Clique nos cantos da ${modo==='area'?'área verde':'quadra'}. ${TOQUE?'Feche tocando no primeiro ponto ou em Concluir.':'Feche clicando no primeiro ponto, com duplo clique ou Enter. Esc cancela.'}`:HINT_MAPA;
 }
-$('#b-desenhar').onclick=()=>{modo='quadra';desenho=[];setModoDesenho(true)};
-$('#b-desenhar-area').onclick=()=>{modo='area';desenho=[];setModoDesenho(true)};
+$('#b-desenhar').onclick=()=>{editQ=null;modo='quadra';desenho=[];setModoDesenho(true)};
+$('#b-desenhar-area').onclick=()=>{editQ=null;modo='area';desenho=[];setModoDesenho(true)};
 function concluir(){
   if(!desenho)return;
   if(desenho.length>=3){snap();(modo==='area'?ma():mq()).push(desenho.map(([a,b])=>[+a.toFixed(7),+b.toFixed(7)]));save()}
@@ -627,7 +690,7 @@ function concluir(){
 function cancelarDesenho(){if(!desenho)return;desenho=null;camDesenho?.clearLayers();setModoDesenho(false)}
 $('#b-concluir').onclick=concluir;
 $('#b-desfazer-ponto').onclick=()=>{desenho?.pop();desenharRascunho()};
-$('#qlist').addEventListener('click',e=>{const{rmq,rma}=e.target.dataset;if(rmq==null&&rma==null)return;snap();(rma!=null?ma():mq()).splice(+(rma??rmq),1);save();desenharMapa()});
+$('#qlist').addEventListener('click',e=>{const{rmq,rma}=e.target.dataset;if(rmq==null&&rma==null){const s=e.target.closest('[data-ed]');if(s){const[k,i]=s.dataset.ed.split(':');editar(k,+i)}return}editQ=null;snap();(rma!=null?ma():mq()).splice(+(rma??rmq),1);save();desenharMapa()});
 $('#f-busca').addEventListener('submit',async e=>{
   e.preventDefault();const q=$('#q-busca').value.trim();if(!q||!mapa)return;
   $('#map-hint').textContent='Buscando…';
